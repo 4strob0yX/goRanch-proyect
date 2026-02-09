@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('productos', function (Blueprint $table) {
+            $table->id();
+            
+            // relacion con tienda
+            $table->foreignId('tienda_id')->constrained('tiendas')->onDelete('cascade');
+            
+            $table->string('nombre', 100);
+            $table->text('descripcion')->nullable();
+            $table->decimal('precio', 10, 2);
+            $table->string('imagen_url')->nullable();
+            $table->boolean('disponible')->default(true);
+            
+            //laracel pide esto
+            $table->timestamps(); 
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('productos');
+    }
+};
