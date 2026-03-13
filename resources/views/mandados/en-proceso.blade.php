@@ -4,156 +4,128 @@
 @push('styles')
 <style>
     body { background: var(--fondo); }
-    .page { max-width: 600px; padding: 2rem 1rem; }
-    .mandado-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .mandado-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; }
-    .folio-badge { background: var(--gris-claro); border-radius: 999px; padding: .3rem .9rem; font-size: .85rem; font-weight: 600; color: var(--gris); }
+    .top-bar { background: var(--blanco); border-bottom: 1px solid var(--borde); height: 56px; padding: 0 1.2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .back-btn { color: var(--gris); text-decoration: none; display: flex; align-items: center; gap: .4rem; font-size: .875rem; }
+    .top-title { font-family: var(--font-display); font-weight: 700; }
 
-    /* Tienda card */
-    .tienda-card { background: linear-gradient(135deg, #d4e8c8, #b8d8a8); border-radius: 16px; padding: 1.2rem 1.4rem; margin-bottom: 1rem; }
-    .tienda-label { display: flex; align-items: center; gap: .5rem; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; }
+    .page-body { max-width: 480px; margin: 0 auto; padding: 1.5rem; }
 
-    /* Timeline */
-    .timeline-card { background: var(--blanco); border-radius: 16px; box-shadow: var(--sombra); padding: 1.2rem 1.4rem; margin-bottom: 1rem; }
-    .timeline-item { display: flex; gap: 1rem; position: relative; }
-    .timeline-item:not(:last-child) { margin-bottom: 1.5rem; }
-    .timeline-left { display: flex; flex-direction: column; align-items: center; }
-    .timeline-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .timeline-dot.active { background: var(--verde); }
-    .timeline-dot.pending { background: var(--gris-claro); }
-    .timeline-line { width: 2px; flex: 1; background: var(--gris-claro); margin: 4px 0; min-height: 30px; }
-    .timeline-content { flex: 1; padding-top: .3rem; }
-    .timeline-content strong { font-weight: 600; display: block; }
-    .timeline-content .status-text { font-size: .875rem; color: var(--verde); font-weight: 600; }
-    .timeline-content .desc { font-size: .85rem; color: var(--gris); margin-top: .2rem; }
-    .timeline-content .pending-text { font-size: .875rem; color: var(--gris); }
-    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--verde); animation: pulse 2s infinite; margin-left: auto; margin-top: .4rem; }
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+    /* Status timeline */
+    .timeline { margin-bottom: 2rem; }
+    .tl-item { display: flex; gap: 1rem; margin-bottom: 0; }
+    .tl-left { display: flex; flex-direction: column; align-items: center; }
+    .tl-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: .75rem; font-weight: 700; }
+    .tl-dot.done { background: var(--verde); color: white; }
+    .tl-dot.current { background: var(--amarillo); color: white; animation: pulse 1.5s infinite; }
+    .tl-dot.pending { background: var(--borde); color: var(--gris); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .tl-line { width: 2px; flex: 1; background: var(--borde); margin: 3px 0; min-height: 24px; }
+    .tl-line.done { background: var(--verde); }
+    .tl-right { padding-bottom: 1.4rem; padding-top: .1rem; }
+    .tl-title { font-weight: 600; font-size: .9rem; }
+    .tl-sub { font-size: .75rem; color: var(--gris); margin-top: .15rem; }
+
+    /* Lista items */
+    .items-card { background: var(--blanco); border-radius: var(--r-lg); border: 1px solid var(--borde); overflow: hidden; margin-bottom: 1rem; }
+    .ic-header { padding: .8rem 1.2rem; background: var(--fondo); border-bottom: 1px solid var(--borde); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gris); }
+    .ic-item { display: flex; align-items: center; gap: .9rem; padding: .8rem 1.2rem; border-bottom: 1px solid var(--borde); }
+    .ic-item:last-child { border-bottom: none; }
+    .ic-check { width: 22px; height: 22px; border-radius: 50%; background: var(--verde-bg); border: 1.5px solid var(--verde-claro); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ic-nombre { flex: 1; font-weight: 500; font-size: .875rem; }
+    .ic-qty { font-size: .78rem; color: var(--gris); background: var(--fondo); padding: .2rem .6rem; border-radius: var(--r-full); }
 
     /* Conductor card */
-    .conductor-card { background: var(--blanco); border-radius: 16px; box-shadow: var(--sombra); padding: 1.2rem 1.4rem; margin-bottom: 1rem; }
-    .conductor-row-inner { display: flex; align-items: center; gap: 1rem; }
-    .c-avatar { width: 52px; height: 52px; border-radius: 50%; background: #f0c060; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; position: relative; }
-    .c-rating { position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); background: var(--verde); color: white; border-radius: 999px; padding: .05rem .4rem; font-size: .65rem; font-weight: 700; white-space: nowrap; }
-    .c-info strong { font-weight: 700; font-size: 1rem; display: block; }
-    .c-info span { font-size: .8rem; color: var(--gris); }
-    .c-placa { background: var(--gris-claro); border-radius: 999px; padding: .2rem .7rem; font-size: .8rem; font-weight: 600; margin-left: auto; }
-    .action-btns-row { display: flex; gap: .8rem; margin-top: 1rem; }
+    .conductor-card { background: var(--blanco); border-radius: var(--r-lg); border: 1px solid var(--borde); padding: 1rem 1.2rem; display: flex; align-items: center; gap: .9rem; margin-bottom: 1rem; }
+    .c-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--verde-claro); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--verde-oscuro); flex-shrink: 0; }
+    .c-name { font-weight: 700; font-size: .9rem; }
+    .c-sub { font-size: .75rem; color: var(--gris); margin-top: .1rem; }
+    .c-rating { font-size: .75rem; color: var(--amarillo); font-weight: 600; margin-top: .1rem; }
 
-    /* Costos */
-    .costos-card { background: var(--blanco); border-radius: 16px; box-shadow: var(--sombra); padding: 1.2rem 1.4rem; }
-    .costo-row { display: flex; justify-content: space-between; font-size: .9rem; padding: .4rem 0; }
-    .costo-row.total { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; border-top: 1px solid var(--gris-claro); margin-top: .4rem; padding-top: .8rem; }
-    .costo-row.total span:last-child { color: var(--verde-oscuro); }
-    .precio-warning { background: #fef3c7; border-radius: 10px; padding: .7rem .9rem; margin-top: .8rem; display: flex; gap: .5rem; font-size: .8rem; color: #92400e; }
+    /* Resumen */
+    .resumen-card { background: var(--verde-oscuro); border-radius: var(--r-lg); padding: 1.1rem 1.3rem; color: white; }
+    .resumen-row { display: flex; justify-content: space-between; font-size: .85rem; color: rgba(255,255,255,.6); margin-bottom: .4rem; }
+    .resumen-total { display: flex; justify-content: space-between; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; color: white; padding-top: .7rem; border-top: 1px solid rgba(255,255,255,.12); margin-top: .3rem; }
 </style>
 @endpush
 
 @section('content')
-<div class="page" style="margin: 0 auto;">
-    <div class="mandado-header">
-        <h1 class="mandado-title">Mandado en Proceso</h1>
-        <span class="folio-badge">#GR-{{ $servicio->id ?? '8492' }}</span>
-    </div>
+<div class="top-bar">
+    <a href="{{ route('dashboard') }}" class="back-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </a>
+    <span class="top-title">Mandado en proceso</span>
+    <span style="font-size:.75rem; color:var(--gris);">#{{ $servicio->id }}</span>
+</div>
 
-    {{-- Tienda --}}
-    <div class="tienda-card">
-        <div class="tienda-label">
-            <svg width="20" height="20" fill="none" stroke="var(--verde-oscuro)" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-            {{ $servicio->tienda ?? 'Tienda El Cruce' }}
-        </div>
-    </div>
+<div class="page-body">
 
     {{-- Timeline --}}
-    <div class="timeline-card">
-        <div class="timeline-item">
-            <div class="timeline-left">
-                <div class="timeline-dot active">
-                    <svg width="18" height="18" fill="white" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
-                </div>
-                <div class="timeline-line"></div>
-            </div>
-            <div class="timeline-content">
-                <div style="display:flex; justify-content:space-between;">
-                    <strong>Comprando</strong>
-                    <div class="live-dot"></div>
-                </div>
-                <div class="status-text">En progreso • Hace 5 min</div>
-                <div class="desc">{{ $conductor->usuario->nombre ?? 'Ramón' }} está recolectando tus artículos en {{ $servicio->tienda ?? 'Tienda El Cruce' }}.</div>
-            </div>
-        </div>
+    @php
+        $pasos = [
+            ['key'=>'buscando',  'label'=>'Buscando conductor', 'sub'=>'Asignando el mejor conductor disponible'],
+            ['key'=>'aceptado',  'label'=>'Conductor en camino', 'sub'=>'Va a comprar tus artículos'],
+            ['key'=>'en_ruta',   'label'=>'Regresando contigo', 'sub'=>'Ya tiene todo y viene en camino'],
+            ['key'=>'completado','label'=>'¡Entregado!', 'sub'=>'Tu mandado llegó'],
+        ];
+        $orden = ['buscando'=>0,'aceptado'=>1,'en_sitio'=>1,'en_ruta'=>2,'completado'=>3];
+        $actual = $orden[$servicio->estatus] ?? 0;
+    @endphp
 
-        <div class="timeline-item">
-            <div class="timeline-left">
-                <div class="timeline-dot pending">
-                    <svg width="18" height="18" fill="none" stroke="var(--gris)" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>
+    <div class="timeline">
+        @foreach($pasos as $idx => $paso)
+            <div class="tl-item">
+                <div class="tl-left">
+                    <div class="tl-dot {{ $idx < $actual ? 'done' : ($idx === $actual ? 'current' : 'pending') }}">
+                        @if($idx < $actual) ✓ @else {{ $idx + 1 }} @endif
+                    </div>
+                    @if(!$loop->last)
+                        <div class="tl-line {{ $idx < $actual ? 'done' : '' }}"></div>
+                    @endif
                 </div>
-                <div class="timeline-line"></div>
-            </div>
-            <div class="timeline-content">
-                <strong>En camino a tu casa</strong>
-                <div class="pending-text">Pendiente</div>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-left">
-                <div class="timeline-dot pending">
-                    <svg width="18" height="18" fill="none" stroke="var(--gris)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg>
+                <div class="tl-right">
+                    <div class="tl-title" style="{{ $idx === $actual ? 'color:var(--verde-oscuro);font-weight:700;' : ($idx < $actual ? '' : 'color:var(--gris);') }}">{{ $paso['label'] }}</div>
+                    <div class="tl-sub">{{ $paso['sub'] }}</div>
                 </div>
             </div>
-            <div class="timeline-content">
-                <strong>Entrega</strong>
-                <div class="pending-text">Pendiente</div>
-            </div>
-        </div>
+        @endforeach
     </div>
 
     {{-- Conductor --}}
-    <div class="conductor-card">
-        <div class="conductor-row-inner">
-            <div class="c-avatar">
-                🧑
-                <div class="c-rating">4.9 ★</div>
+    @if($servicio->conductor)
+        <div class="conductor-card">
+            <div class="c-avatar">{{ strtoupper(substr($servicio->conductor->usuario->nombre ?? 'C', 0, 2)) }}</div>
+            <div>
+                <div class="c-name">{{ $servicio->conductor->usuario->nombre ?? 'Conductor' }}</div>
+                <div class="c-sub">{{ ucfirst($servicio->conductor->tipo_vehiculo) }} · {{ $servicio->conductor->placa }}</div>
+                <div class="c-rating">⭐ {{ $servicio->conductor->calificacion_promedio }}</div>
             </div>
-            <div class="c-info">
-                <strong>{{ $conductor->usuario->nombre ?? 'Ramón G.' }}</strong>
-                <span>Tu Runner asignado</span>
-            </div>
-            <span class="c-placa">{{ $conductor->modelo ?? 'Ford Ranger' }} • {{ $conductor->placa ?? 'GR-220' }}</span>
-        </div>
-        <div class="action-btns-row">
-            <a href="tel:{{ $conductor->usuario->telefono ?? '' }}" class="btn btn-primary" style="flex:1; border-radius:10px;">
-                <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                Llamar
-            </a>
-            <a href="#" class="btn btn-outline" style="flex:1; border-radius:10px;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                Mensaje
+            <a href="tel:" style="margin-left:auto; width:36px; height:36px; border-radius:50%; background:var(--verde-bg); border:1px solid var(--verde-claro); display:flex; align-items:center; justify-content:center; color:var(--verde-oscuro); text-decoration:none;">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.81a2 2 0 012-2.18H8a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L9.91 15a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
             </a>
         </div>
+    @endif
+
+    {{-- Items --}}
+    @php $items = json_decode($servicio->notas, true) ?? []; @endphp
+    @if(count($items))
+        <div class="items-card">
+            <div class="ic-header">Tu lista ({{ count($items) }} artículos)</div>
+            @foreach($items as $item)
+                <div class="ic-item">
+                    <div class="ic-check"><svg width="11" height="11" fill="none" stroke="var(--verde)" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <div class="ic-nombre">{{ $item['nombre'] ?? '' }}</div>
+                    <div class="ic-qty">×{{ $item['cantidad'] ?? 1 }}</div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    {{-- Resumen --}}
+    <div class="resumen-card">
+        <div class="resumen-row"><span>Envío</span><span>${{ number_format($servicio->costo_envio, 2) }}</span></div>
+        <div class="resumen-row"><span>Pago</span><span>{{ ucfirst($servicio->metodo_pago) }}</span></div>
+        <div class="resumen-total"><span>Total estimado</span><span>${{ number_format($servicio->total_final, 2) }}</span></div>
     </div>
 
-    {{-- Costos --}}
-    <div class="costos-card">
-        <div class="costo-row">
-            <span>Servicio de mandado</span>
-            <span>${{ number_format($servicio->costo_productos ?? 110, 2) }} MXN</span>
-        </div>
-        <div class="costo-row">
-            <span>Tarifa de envío</span>
-            <span>${{ number_format($servicio->costo_envio ?? 40, 2) }} MXN</span>
-        </div>
-        <div class="costo-row total">
-            <span>Total Estimado</span>
-            <span>${{ number_format(($servicio->total_final ?? 150), 2) }} MXN</span>
-        </div>
-        <div class="precio-warning">
-            <svg width="16" height="16" fill="none" stroke="#92400e" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            El precio final puede variar si se agregan productos adicionales durante el proceso de compra.
-        </div>
-    </div>
 </div>
 @endsection

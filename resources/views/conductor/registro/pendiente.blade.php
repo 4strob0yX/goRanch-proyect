@@ -1,84 +1,73 @@
 @extends('layouts.app')
-@section('title', 'Registro Enviado - goRanch')
+@section('title', 'Solicitud Pendiente - goRanch')
 
 @push('styles')
 <style>
-    body { background: var(--fondo); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .pendiente-card {
-        background: var(--blanco); border-radius: 24px; padding: 3rem 2rem;
-        width: 100%; max-width: 460px; text-align: center;
-        box-shadow: 0 8px 40px rgba(0,0,0,.1);
-    }
-    .pending-icon {
-        width: 80px; height: 80px; border-radius: 50%;
-        background: #fef3c7; display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 1.5rem;
-    }
-    .pendiente-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; margin-bottom: .5rem; }
-    .pendiente-sub { color: var(--gris); font-size: .95rem; line-height: 1.6; margin-bottom: 2rem; }
+    body { background: var(--verde-oscuro); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    body::before { display: none; }
 
-    .steps-list { text-align: left; margin-bottom: 2rem; }
-    .step-item { display: flex; align-items: flex-start; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--gris-claro); }
-    .step-item:last-child { border-bottom: none; }
-    .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--verde-bg); color: var(--verde-oscuro); font-weight: 700; font-size: .8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .step-text strong { font-weight: 600; display: block; font-size: .9rem; }
-    .step-text span { font-size: .8rem; color: var(--gris); }
+    .pend-card { background: white; border-radius: var(--r-xl); padding: 2.5rem 2rem; max-width: 420px; width: 90%; text-align: center; }
 
-    .email-badge { background: var(--verde-bg); border-radius: 12px; padding: .8rem 1.2rem; font-size: .875rem; color: var(--verde-oscuro); font-weight: 600; margin-bottom: 1.5rem; display: inline-block; }
+    .pend-ico { width: 72px; height: 72px; border-radius: 50%; background: var(--amarillo-bg); border: 2px solid #fde68a; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.3rem; }
+
+    .pend-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; margin-bottom: .5rem; }
+    .pend-sub { color: var(--gris); font-size: .9rem; line-height: 1.6; margin-bottom: 1.8rem; }
+
+    .steps-mini { display: flex; flex-direction: column; gap: .7rem; margin-bottom: 2rem; text-align: left; }
+    .smi { display: flex; align-items: center; gap: .8rem; }
+    .smi-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .82rem; font-weight: 700; flex-shrink: 0; }
+    .smi-dot.done { background: var(--verde-bg); color: var(--verde-oscuro); }
+    .smi-dot.wait { background: var(--amarillo-bg); color: #92400e; }
+    .smi-dot.pend { background: var(--fondo); color: var(--gris); }
+    .smi-lbl { font-size: .875rem; font-weight: 500; }
+    .smi-sub { font-size: .75rem; color: var(--gris); margin-top: .1rem; }
+
+    .divider { height: 1px; background: var(--borde); margin: 1.5rem 0; }
 </style>
 @endpush
 
 @section('content')
-<div class="pendiente-card">
-    <div class="pending-icon">
-        <svg width="36" height="36" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-        </svg>
-    </div>
-
-    <h1 class="pendiente-title">¡Solicitud Enviada!</h1>
-    <p class="pendiente-sub">
-        Recibimos tu registro correctamente. Nuestro equipo revisará tus documentos en las próximas <strong>24 a 48 horas</strong>.
+<div class="pend-card">
+    <div class="pend-ico">⏳</div>
+    <h1 class="pend-title">Solicitud enviada</h1>
+    <p class="pend-sub">
+        Recibimos tu solicitud. Nuestro equipo revisará tus documentos
+        y te avisará en menos de <strong>24 horas</strong>.
     </p>
 
-    <div class="email-badge">
-        📧 Notificación a: {{ auth()->user()->email }}
-    </div>
-
-    <div class="steps-list">
-        <div class="step-item">
-            <div class="step-num">1</div>
-            <div class="step-text">
-                <strong>Revisión de documentos</strong>
-                <span>Verificamos tu licencia y seguro del vehículo.</span>
+    <div class="steps-mini">
+        <div class="smi">
+            <div class="smi-dot done">✓</div>
+            <div>
+                <div class="smi-lbl">Datos enviados</div>
+                <div class="smi-sub">Tu información fue recibida</div>
             </div>
         </div>
-        <div class="step-item">
-            <div class="step-num">2</div>
-            <div class="step-text">
-                <strong>Aprobación de cuenta</strong>
-                <span>Te enviamos un correo cuando tu cuenta esté activa.</span>
+        <div class="smi">
+            <div class="smi-dot wait">👁</div>
+            <div>
+                <div class="smi-lbl">En revisión</div>
+                <div class="smi-sub">Verificando tus documentos</div>
             </div>
         </div>
-        <div class="step-item">
-            <div class="step-num">3</div>
-            <div class="step-text">
-                <strong>Empieza a trabajar</strong>
-                <span>Inicia sesión y comienza a recibir solicitudes.</span>
+        <div class="smi">
+            <div class="smi-dot pend">3</div>
+            <div>
+                <div class="smi-lbl">Activación</div>
+                <div class="smi-sub">Recibirás un correo de confirmación</div>
             </div>
         </div>
     </div>
 
-    <a href="{{ route('login.conductor') }}" class="btn btn-primary btn-full" style="border-radius:12px; padding:1rem;">
-        Ir al Login de Conductores
-    </a>
+    <div class="divider"></div>
 
-    <form method="POST" action="{{ route('logout') }}" style="margin-top:.8rem;">
+    <p style="font-size:.82rem; color:var(--gris); margin-bottom:1.2rem;">
+        ¿Tienes dudas? Escríbenos a <strong style="color:var(--verde-oscuro);">soporte@goranch.mx</strong>
+    </p>
+
+    <form method="POST" action="{{ route('logout') }}">
         @csrf
-        <button type="submit" style="background:none; border:none; color:var(--gris); font-size:.875rem; cursor:pointer; font-family:'DM Sans',sans-serif;">
-            Cerrar sesión
-        </button>
+        <button type="submit" class="btn btn-outline btn-full" style="border-radius:var(--r-sm);">Cerrar sesión</button>
     </form>
 </div>
 @endsection

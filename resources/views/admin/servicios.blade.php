@@ -4,303 +4,194 @@
 @push('styles')
 <style>
     body { background: var(--fondo); }
-    .admin-layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
-    .sidebar { background: #1a2118; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; width: 240px; z-index: 50; }
-    .sidebar-header { padding: 1.5rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,.08); }
-    .sidebar-brand { display: flex; align-items: center; gap: .6rem; font-family: 'Syne', sans-serif; font-weight: 700; color: white; font-size: 1rem; text-decoration: none; }
-    .sidebar-role { font-size: .7rem; color: #6b9b5e; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-top: .2rem; }
-    .sidebar-nav { flex: 1; padding: 1rem .6rem; }
-    .sidebar-item { display: flex; align-items: center; gap: .75rem; padding: .7rem .9rem; border-radius: 10px; text-decoration: none; color: #8aa880; font-size: .875rem; font-weight: 500; margin-bottom: .2rem; transition: all .15s; }
-    .sidebar-item:hover { background: rgba(255,255,255,.06); color: #d4e8c8; }
-    .sidebar-item.active { background: var(--verde); color: white; }
-    .sidebar-footer { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,.08); }
-    .sidebar-logout { display: flex; align-items: center; gap: .6rem; color: #8aa880; font-size: .875rem; background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; width: 100%; }
-    .main-content { margin-left: 240px; }
-    .top-header { background: white; border-bottom: 1px solid var(--gris-claro); padding: .9rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
-    .header-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.3rem; }
-    .page-body { padding: 2rem; }
+    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
 
-    /* Mini stats */
-    .mini-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-    .mini-stat { background: white; border-radius: 12px; padding: 1rem 1.2rem; box-shadow: var(--sombra); }
-    .mini-stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
-    .mini-stat-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; }
-    .mini-stat strong { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; display: block; }
-    .mini-stat span { font-size: .78rem; color: var(--gris); }
+    .sidebar { background: var(--verde-oscuro); position: fixed; top: 0; left: 0; height: 100vh; width: 240px; display: flex; flex-direction: column; z-index: 50; overflow-y: auto; }
+    .sb-brand { padding: 1.3rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: .6rem; font-family: var(--font-display); font-weight: 700; color: white; font-size: 1.05rem; }
+    .sb-brand-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--verde-mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sb-label { padding: .8rem 1rem .3rem; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.3); }
+    .sb-item { display: flex; align-items: center; gap: .7rem; padding: .6rem 1rem; border-radius: var(--r-sm); text-decoration: none; color: rgba(255,255,255,.5); font-size: .85rem; font-weight: 500; margin: .1rem .5rem; transition: all .15s; }
+    .sb-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+    .sb-item.active { background: rgba(255,255,255,.1); color: white; }
+
+    .main { margin-left: 240px; }
+    .main-header { background: var(--blanco); border-bottom: 1px solid var(--borde); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 40; }
+    .main-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; }
+    .main-sub { font-size: .82rem; color: var(--gris); margin-top: .1rem; }
+    .main-body { padding: 1.8rem 2rem; }
+
+    /* Stats */
+    .stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; margin-bottom: 1.5rem; }
+    .stat-mini { background: var(--blanco); border-radius: var(--r-md); border: 1px solid var(--borde); padding: .9rem 1rem; }
+    .stat-mini-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .stat-mini-lbl { font-size: .72rem; color: var(--gris); margin-top: .3rem; }
 
     /* Filtros */
-    .filtros-row { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .filtro-group { display: flex; flex-direction: column; gap: .3rem; }
-    .filtro-label { font-size: .75rem; font-weight: 700; color: var(--gris); text-transform: uppercase; letter-spacing: .05em; }
-    .filtro-select { padding: .55rem 1rem; border: 1.5px solid var(--gris-claro); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: .875rem; outline: none; background: white; cursor: pointer; }
-    .filtro-select:focus { border-color: var(--verde); }
+    .filter-row { display: flex; gap: .5rem; margin-bottom: 1.2rem; flex-wrap: wrap; align-items: center; }
+    .chip { padding: .35rem .9rem; border-radius: var(--r-full); font-size: .8rem; font-weight: 600; border: 1.5px solid var(--borde); background: var(--blanco); color: var(--gris); text-decoration: none; transition: all .15s; white-space: nowrap; }
+    .chip:hover { border-color: var(--verde-claro); color: var(--verde-oscuro); }
+    .chip.active { background: var(--verde-oscuro); color: white; border-color: var(--verde-oscuro); }
+    .sep { color: var(--borde); }
 
     /* Tabla */
-    .table-card { background: white; border-radius: 16px; box-shadow: var(--sombra); overflow: hidden; }
-    .table-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--gris-claro); display: flex; justify-content: space-between; align-items: center; }
-    .table-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
-    .table-sub { font-size: .8rem; color: var(--gris); margin-top: .1rem; }
-    table { width: 100%; border-collapse: collapse; }
-    thead th { padding: .75rem 1.2rem; text-align: left; font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--gris); border-bottom: 1px solid var(--gris-claro); white-space: nowrap; }
-    tbody td { padding: .85rem 1.2rem; font-size: .855rem; border-bottom: 1px solid #f9fafb; vertical-align: middle; }
+    .table-card { background: var(--blanco); border-radius: var(--r-lg); border: 1px solid var(--borde); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    .table-wrap { overflow-x: auto; }
+    thead th { padding: .75rem 1.1rem; text-align: left; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gris); background: var(--fondo); border-bottom: 1px solid var(--borde); white-space: nowrap; }
+    tbody td { padding: .8rem 1.1rem; font-size: .85rem; border-bottom: 1px solid var(--gris-claro); vertical-align: middle; }
     tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: var(--fondo); }
+    tbody tr:hover td { background: var(--fondo); }
 
-    .user-cell { display: flex; align-items: center; gap: .6rem; }
-    .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--verde-claro); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .72rem; color: var(--verde-oscuro); flex-shrink: 0; }
-    .user-name { font-weight: 600; font-size: .855rem; }
+    .ruta-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texto-2); }
+    .tipo-chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: 600; }
+    .monto-cell { font-family: var(--font-display); font-weight: 700; color: var(--verde-oscuro); }
 
-    .ruta-cell { font-size: .78rem; color: var(--gris); line-height: 1.5; }
-    .ruta-arrow { color: var(--verde); font-weight: 700; }
+    .paginacion { padding: 1rem 1.2rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--borde); font-size: .82rem; color: var(--gris); }
 
-    .monto { font-weight: 700; color: var(--verde-oscuro); }
-
-    .empty-state { text-align: center; padding: 3rem; color: var(--gris); }
-
-    /* Tipo chip */
-    .tipo-viaje    { background: #dbeafe; color: #1d4ed8; }
-    .tipo-mandado  { background: #fef3c7; color: #92400e; }
-    .tipo-delivery { background: #f3e8ff; color: #7e22ce; }
+    @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+        .sidebar { display: none; }
+        .main { margin-left: 0; }
+        .main-body { padding: 1rem; }
+        .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="admin-layout">
-    {{-- Sidebar --}}
+<div class="layout">
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--verde)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
-                goRanch
-            </a>
-            <div class="sidebar-role">Admin Panel</div>
+        <div class="sb-brand">
+            <div class="sb-brand-dot"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div>
+            goRanch Admin
         </div>
-        <nav class="sidebar-nav">
-            <a href="{{ route('admin.dashboard') }}" class="sidebar-item">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                Dashboard
-            </a>
-            <a href="{{ route('admin.conductores') }}" class="sidebar-item">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>
-                Conductores
-            </a>
-            <a href="{{ route('admin.usuarios') }}" class="sidebar-item">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                Usuarios
-            </a>
-            <a href="{{ route('admin.servicios') }}" class="sidebar-item active">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Servicios
-            </a>
-        </nav>
-        <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="sidebar-logout">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Cerrar Sesión
+        <div class="sb-label">Gestión</div>
+        <a href="{{ route('admin.dashboard') }}"   class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+        <a href="{{ route('admin.conductores') }}"  class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>Conductores</a>
+        <a href="{{ route('admin.usuarios') }}"    class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Usuarios</a>
+        <a href="{{ route('admin.servicios') }}"   class="sb-item active"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Servicios</a>
+        <div style="margin-top:auto; padding:1rem; border-top:1px solid rgba(255,255,255,.08);">
+            <form method="POST" action="{{ route('logout') }}">@csrf
+                <button type="submit" class="sb-item" style="width:100%; background:none; border:none; cursor:pointer; color:rgba(255,255,255,.35);">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Cerrar sesión
                 </button>
             </form>
         </div>
     </aside>
 
-    {{-- Main --}}
-    <div class="main-content">
-        <div class="top-header">
-            <div class="header-title">Servicios</div>
+    <div class="main">
+        <div class="main-header">
+            <div>
+                <div class="main-title">Servicios</div>
+                <div class="main-sub">Historial completo de viajes y mandados</div>
+            </div>
         </div>
 
-        <div class="page-body">
-            @if(session('success'))
-                <div class="alert alert-success" style="margin-bottom:1rem;">{{ session('success') }}</div>
-            @endif
-
-            {{-- Mini stats --}}
+        <div class="main-body">
             @php
-                use App\Models\Servicio;
-                $totales = [
-                    'todos'      => Servicio::count(),
-                    'completado' => Servicio::where('estatus','completado')->count(),
-                    'buscando'   => Servicio::where('estatus','buscando')->count(),
-                    'cancelado'  => Servicio::where('estatus','cancelado')->count(),
-                    'ingresos'   => Servicio::where('estatus','completado')->sum('total_final'),
-                ];
+                $filtroTipo    = request('tipo', 'todos');
+                $filtroEstatus = request('estatus', 'todos');
+
+                $query = \App\Models\Servicio::with(['cliente','conductor.usuario'])->orderByDesc('creado_en');
+                if($filtroTipo    !== 'todos') $query->where('tipo',    $filtroTipo);
+                if($filtroEstatus !== 'todos') $query->where('estatus', $filtroEstatus);
+                $servicios = $query->paginate(25);
+
+                $total      = \App\Models\Servicio::count();
+                $completados = \App\Models\Servicio::where('estatus','completado')->count();
+                $activos    = \App\Models\Servicio::whereNotIn('estatus',['completado','cancelado'])->count();
+                $ingresos   = \App\Models\Servicio::where('estatus','completado')->sum('total_final');
+
+                $tipoLabel  = ['viaje'=>'🚗 Viaje','mandado_libre'=>'🛒 Mandado','delivery_tienda'=>'🏪 Delivery'];
+                $estClass   = ['completado'=>'badge-green','cancelado'=>'badge-red','buscando'=>'badge-yellow','aceptado'=>'badge-blue','en_ruta'=>'badge-blue','en_sitio'=>'badge-blue'];
             @endphp
-            <div class="mini-stats">
-                <div class="mini-stat">
-                    <div class="mini-stat-top">
-                        <div class="mini-stat-icon" style="background:var(--verde-bg);">
-                            <svg width="16" height="16" fill="none" stroke="var(--verde-oscuro)" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        </div>
-                    </div>
-                    <strong>{{ $totales['todos'] }}</strong>
-                    <span>Total servicios</span>
+
+            {{-- Stats --}}
+            <div class="stats-strip">
+                <div class="stat-mini">
+                    <div class="stat-mini-val">{{ $total }}</div>
+                    <div class="stat-mini-lbl">Total servicios</div>
                 </div>
-                <div class="mini-stat">
-                    <div class="mini-stat-top">
-                        <div class="mini-stat-icon" style="background:#dcfce7;">
-                            <svg width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                        </div>
-                    </div>
-                    <strong>{{ $totales['completado'] }}</strong>
-                    <span>Completados</span>
+                <div class="stat-mini">
+                    <div class="stat-mini-val" style="color:var(--verde-oscuro);">{{ $completados }}</div>
+                    <div class="stat-mini-lbl">Completados</div>
                 </div>
-                <div class="mini-stat">
-                    <div class="mini-stat-top">
-                        <div class="mini-stat-icon" style="background:#fef3c7;">
-                            <svg width="16" height="16" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </div>
-                    </div>
-                    <strong>{{ $totales['buscando'] }}</strong>
-                    <span>En espera</span>
+                <div class="stat-mini">
+                    <div class="stat-mini-val" style="color:var(--azul);">{{ $activos }}</div>
+                    <div class="stat-mini-lbl">En curso</div>
                 </div>
-                <div class="mini-stat">
-                    <div class="mini-stat-top">
-                        <div class="mini-stat-icon" style="background:#dcfce7;">
-                            <svg width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                        </div>
-                    </div>
-                    <strong>${{ number_format($totales['ingresos'], 0) }}</strong>
-                    <span>Ingresos totales</span>
+                <div class="stat-mini">
+                    <div class="stat-mini-val" style="color:var(--verde-oscuro); font-size:1.2rem;">${{ number_format($ingresos, 0) }}</div>
+                    <div class="stat-mini-lbl">Ingresos totales</div>
                 </div>
             </div>
 
-            {{-- Filtros --}}
-            <form method="GET" action="{{ route('admin.servicios') }}">
-                <div class="filtros-row">
-                    <div class="filtro-group">
-                        <label class="filtro-label">Tipo</label>
-                        <select name="tipo" class="filtro-select" onchange="this.form.submit()">
-                            <option value="todos" {{ $tipo === 'todos' ? 'selected' : '' }}>Todos los tipos</option>
-                            <option value="viaje"          {{ $tipo === 'viaje'          ? 'selected' : '' }}>Viaje</option>
-                            <option value="mandado_libre"  {{ $tipo === 'mandado_libre'  ? 'selected' : '' }}>Mandado libre</option>
-                            <option value="delivery_tienda"{{ $tipo === 'delivery_tienda'? 'selected' : '' }}>Delivery tienda</option>
-                        </select>
-                    </div>
-                    <div class="filtro-group">
-                        <label class="filtro-label">Estatus</label>
-                        <select name="estatus" class="filtro-select" onchange="this.form.submit()">
-                            <option value="todos"      {{ $estatus === 'todos'      ? 'selected' : '' }}>Todos</option>
-                            <option value="buscando"   {{ $estatus === 'buscando'   ? 'selected' : '' }}>Buscando</option>
-                            <option value="aceptado"   {{ $estatus === 'aceptado'   ? 'selected' : '' }}>Aceptado</option>
-                            <option value="en_sitio"   {{ $estatus === 'en_sitio'   ? 'selected' : '' }}>En sitio</option>
-                            <option value="en_ruta"    {{ $estatus === 'en_ruta'    ? 'selected' : '' }}>En ruta</option>
-                            <option value="completado" {{ $estatus === 'completado' ? 'selected' : '' }}>Completado</option>
-                            <option value="cancelado"  {{ $estatus === 'cancelado'  ? 'selected' : '' }}>Cancelado</option>
-                        </select>
-                    </div>
-                    @if($tipo !== 'todos' || $estatus !== 'todos')
-                        <div class="filtro-group" style="justify-content:flex-end; flex: 1;">
-                            <span style="visibility:hidden; font-size:.75rem;">x</span>
-                            <a href="{{ route('admin.servicios') }}" class="btn btn-outline" style="border-radius:10px; padding:.5rem 1rem; font-size:.85rem; align-self:flex-end;">
-                                Limpiar filtros
-                            </a>
-                        </div>
-                    @endif
-                </div>
-            </form>
+            {{-- Filtros tipo --}}
+            <div class="filter-row">
+                <a href="?tipo=todos&estatus={{ $filtroEstatus }}"          class="chip {{ $filtroTipo==='todos'           ?'active':'' }}">Todos</a>
+                <a href="?tipo=viaje&estatus={{ $filtroEstatus }}"          class="chip {{ $filtroTipo==='viaje'           ?'active':'' }}">🚗 Viajes</a>
+                <a href="?tipo=mandado_libre&estatus={{ $filtroEstatus }}"  class="chip {{ $filtroTipo==='mandado_libre'   ?'active':'' }}">🛒 Mandados</a>
+                <a href="?tipo=delivery_tienda&estatus={{ $filtroEstatus }}" class="chip {{ $filtroTipo==='delivery_tienda'?'active':'' }}">🏪 Delivery</a>
+                <span class="sep">|</span>
+                <a href="?tipo={{ $filtroTipo }}&estatus=todos"         class="chip {{ $filtroEstatus==='todos'       ?'active':'' }}">Todos</a>
+                <a href="?tipo={{ $filtroTipo }}&estatus=buscando"      class="chip {{ $filtroEstatus==='buscando'    ?'active':'' }}">Buscando</a>
+                <a href="?tipo={{ $filtroTipo }}&estatus=en_ruta"       class="chip {{ $filtroEstatus==='en_ruta'     ?'active':'' }}">En ruta</a>
+                <a href="?tipo={{ $filtroTipo }}&estatus=completado"    class="chip {{ $filtroEstatus==='completado'  ?'active':'' }}">Completados</a>
+                <a href="?tipo={{ $filtroTipo }}&estatus=cancelado"     class="chip {{ $filtroEstatus==='cancelado'   ?'active':'' }}">Cancelados</a>
+            </div>
 
             {{-- Tabla --}}
             <div class="table-card">
-                <div class="table-header">
-                    <div>
-                        <div class="table-title">Lista de Servicios</div>
-                        <div class="table-sub">{{ $servicios->total() }} registros encontrados</div>
-                    </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tipo</th>
+                                <th>Cliente</th>
+                                <th>Conductor</th>
+                                <th>Ruta</th>
+                                <th>Estatus</th>
+                                <th>Total</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($servicios as $s)
+                                <tr>
+                                    <td style="color:var(--gris); font-size:.78rem; font-weight:600;">#{{ $s->id }}</td>
+                                    <td><span class="tipo-chip">{{ $tipoLabel[$s->tipo] ?? $s->tipo }}</span></td>
+                                    <td>
+                                        <div style="font-weight:600; font-size:.85rem;">{{ $s->cliente->nombre ?? '—' }}</div>
+                                        <div style="font-size:.72rem; color:var(--gris);">{{ $s->cliente->telefono ?? '' }}</div>
+                                    </td>
+                                    <td style="font-size:.82rem; color:var(--texto-2);">{{ $s->conductor?->usuario?->nombre ?? '—' }}</td>
+                                    <td class="ruta-cell" title="{{ $s->direccion_origen }} → {{ $s->direccion_destino }}">
+                                        {{ $s->direccion_origen }} → {{ $s->direccion_destino }}
+                                    </td>
+                                    <td><span class="badge {{ $estClass[$s->estatus] ?? 'badge-gray' }}">{{ ucfirst(str_replace('_',' ',$s->estatus)) }}</span></td>
+                                    <td class="monto-cell">${{ number_format($s->total_final, 2) }}</td>
+                                    <td style="font-size:.75rem; color:var(--gris); white-space:nowrap;">{{ \Carbon\Carbon::parse($s->creado_en)->format('d/m/y H:i') }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" style="text-align:center; padding:3rem; color:var(--gris);">
+                                        Sin servicios con estos filtros.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
 
-                @if($servicios->count() > 0)
-                    <div style="overflow-x:auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Cliente</th>
-                                    <th>Conductor</th>
-                                    <th>Tipo</th>
-                                    <th>Ruta</th>
-                                    <th>Total</th>
-                                    <th>Pago</th>
-                                    <th>Estatus</th>
-                                    <th>Fecha</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($servicios as $s)
-                                    @php
-                                        $tipoLabels  = ['viaje'=>'Viaje','mandado_libre'=>'Mandado','delivery_tienda'=>'Delivery'];
-                                        $tipoClasses = ['viaje'=>'tipo-viaje','mandado_libre'=>'tipo-mandado','delivery_tienda'=>'tipo-delivery'];
-                                        $estatusClases = [
-                                            'buscando'   => 'badge-yellow',
-                                            'aceptado'   => 'badge-blue',
-                                            'en_sitio'   => 'badge-blue',
-                                            'en_ruta'    => 'badge-blue',
-                                            'completado' => 'badge-green',
-                                            'cancelado'  => 'badge-red',
-                                        ];
-                                    @endphp
-                                    <tr>
-                                        <td style="font-weight:700; font-size:.78rem; color:var(--gris);">
-                                            #{{ str_pad($s->id, 4, '0', STR_PAD_LEFT) }}
-                                        </td>
-                                        <td>
-                                            <div class="user-cell">
-                                                <div class="user-avatar">{{ strtoupper(substr($s->cliente->nombre ?? 'U', 0, 2)) }}</div>
-                                                <div class="user-name">{{ Str::limit($s->cliente->nombre ?? 'N/A', 14) }}</div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @if($s->conductor)
-                                                <div class="user-cell">
-                                                    <div class="user-avatar" style="background:#e0f2fe; color:#0369a1;">
-                                                        {{ strtoupper(substr($s->conductor->usuario->nombre ?? 'C', 0, 2)) }}
-                                                    </div>
-                                                    <div class="user-name">{{ Str::limit($s->conductor->usuario->nombre ?? 'N/A', 14) }}</div>
-                                                </div>
-                                            @else
-                                                <span style="color:var(--gris); font-size:.8rem;">Sin asignar</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge {{ $tipoClasses[$s->tipo] ?? '' }}">
-                                                {{ $tipoLabels[$s->tipo] ?? $s->tipo }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="ruta-cell">
-                                                {{ Str::limit($s->direccion_origen, 18) }}<br>
-                                                <span class="ruta-arrow">↓</span>
-                                                {{ Str::limit($s->direccion_destino, 18) }}
-                                            </div>
-                                        </td>
-                                        <td class="monto">${{ number_format($s->total_final, 2) }}</td>
-                                        <td>
-                                            <span style="font-size:.78rem; color:var(--gris);">
-                                                {{ $s->metodo_pago === 'efectivo' ? '💵 Efectivo' : '👛 Billetera' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge {{ $estatusClases[$s->estatus] ?? 'badge-gray' }}">
-                                                {{ ucfirst(str_replace('_', ' ', $s->estatus)) }}
-                                            </span>
-                                        </td>
-                                        <td style="font-size:.78rem; color:var(--gris); white-space:nowrap;">
-                                            {{ \Carbon\Carbon::parse($s->creado_en)->format('d/m/Y') }}<br>
-                                            {{ \Carbon\Carbon::parse($s->creado_en)->format('H:i') }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div style="padding:1rem 1.5rem;">{{ $servicios->links() }}</div>
-                @else
-                    <div class="empty-state">
-                        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        <p style="margin-top:.5rem;">No hay servicios con estos filtros.</p>
+                @if($servicios->hasPages())
+                    <div class="paginacion">
+                        <span>{{ $servicios->firstItem() }}–{{ $servicios->lastItem() }} de {{ $servicios->total() }}</span>
+                        <div>{{ $servicios->withQueryString()->links() }}</div>
                     </div>
                 @endif
             </div>
+
         </div>
     </div>
 </div>

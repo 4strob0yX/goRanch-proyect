@@ -4,194 +4,249 @@
 @push('styles')
 <style>
     body { background: var(--fondo); }
-    .admin-layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
-    .sidebar { background: #1a2118; padding: 0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; width: 240px; z-index: 50; }
-    .sidebar-header { padding: 1.5rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,.08); }
-    .sidebar-brand { display: flex; align-items: center; gap: .6rem; font-family: 'Syne', sans-serif; font-weight: 700; color: white; font-size: 1rem; text-decoration: none; }
-    .sidebar-role { font-size: .7rem; color: #6b9b5e; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-top: .2rem; }
-    .sidebar-nav { flex: 1; padding: 1rem .6rem; }
-    .sidebar-item { display: flex; align-items: center; gap: .75rem; padding: .7rem .9rem; border-radius: 10px; text-decoration: none; color: #8aa880; font-size: .875rem; font-weight: 500; margin-bottom: .2rem; transition: all .15s; }
-    .sidebar-item:hover { background: rgba(255,255,255,.06); color: #d4e8c8; }
-    .sidebar-item.active { background: var(--verde); color: white; }
-    .sidebar-badge { margin-left: auto; background: #ef4444; color: white; border-radius: 999px; padding: .1rem .5rem; font-size: .7rem; font-weight: 700; }
-    .sidebar-footer { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,.08); }
-    .sidebar-logout { display: flex; align-items: center; gap: .6rem; color: #8aa880; font-size: .875rem; background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; width: 100%; }
-    .main-content { margin-left: 240px; }
-    .top-header { background: white; border-bottom: 1px solid var(--gris-claro); padding: .9rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
-    .header-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.3rem; }
-    .page-body { padding: 2rem; }
+    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { background: var(--verde-oscuro); position: fixed; top: 0; left: 0; height: 100vh; width: 240px; display: flex; flex-direction: column; z-index: 50; overflow-y: auto; }
+    .sb-brand { padding: 1.3rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: .6rem; font-family: var(--font-display); font-weight: 700; color: white; font-size: 1.05rem; }
+    .sb-brand-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--verde-mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sb-label { padding: .8rem 1rem .3rem; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.3); }
+    .sb-item { display: flex; align-items: center; gap: .7rem; padding: .6rem 1rem; border-radius: var(--r-sm); text-decoration: none; color: rgba(255,255,255,.5); font-size: .85rem; font-weight: 500; margin: .1rem .5rem; transition: all .15s; }
+    .sb-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+    .sb-item.active { background: rgba(255,255,255,.1); color: white; }
+
+    /* Main */
+    .main { margin-left: 240px; }
+    .main-header { background: var(--blanco); border-bottom: 1px solid var(--borde); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 40; }
+    .main-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; }
+    .main-sub { font-size: .82rem; color: var(--gris); margin-top: .1rem; }
+    .main-body { padding: 1.8rem 2rem; }
 
     /* Filtros */
-    .filter-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
-    .filter-tab { padding: .5rem 1.2rem; border-radius: 999px; font-size: .875rem; font-weight: 600; text-decoration: none; border: 2px solid var(--gris-claro); color: var(--gris); transition: all .15s; }
-    .filter-tab:hover { border-color: var(--verde); color: var(--verde); }
-    .filter-tab.active { background: var(--verde); border-color: var(--verde); color: white; }
+    .filters { display: flex; gap: .4rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .chip { padding: .4rem 1rem; border-radius: var(--r-full); font-size: .82rem; font-weight: 600; border: 1.5px solid var(--borde); background: var(--blanco); color: var(--gris); text-decoration: none; transition: all .15s; white-space: nowrap; }
+    .chip:hover { border-color: var(--verde-claro); color: var(--verde-oscuro); }
+    .chip.active { background: var(--verde-oscuro); color: white; border-color: var(--verde-oscuro); }
+    .chip-yellow.active { background: var(--amarillo); border-color: var(--amarillo); color: white; }
+    .chip-red.active { background: var(--rojo); border-color: var(--rojo); color: white; }
 
-    /* Cards conductor */
-    .conductores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
-    .conductor-card { background: white; border-radius: 16px; box-shadow: var(--sombra); overflow: hidden; }
-    .conductor-card-header { padding: 1.2rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--gris-claro); }
-    .c-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--verde-claro); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--verde-oscuro); font-size: 1.1rem; flex-shrink: 0; }
-    .c-info-main strong { font-weight: 700; display: block; }
-    .c-info-main span { font-size: .8rem; color: var(--gris); }
-    .conductor-card-body { padding: 1rem 1.2rem; }
-    .detail-row { display: flex; justify-content: space-between; font-size: .875rem; padding: .3rem 0; }
-    .detail-row span:first-child { color: var(--gris); }
-    .detail-row span:last-child { font-weight: 600; }
-    .docs-row { margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--gris-claro); }
-    .docs-title { font-size: .75rem; font-weight: 700; color: var(--gris); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }
-    .doc-item { display: flex; align-items: center; justify-content: space-between; padding: .4rem 0; font-size: .8rem; }
-    .doc-item a { color: var(--verde); text-decoration: none; font-weight: 600; }
-    .conductor-card-footer { padding: 1rem 1.2rem; display: flex; gap: .6rem; border-top: 1px solid var(--gris-claro); }
+    /* Stats strip */
+    .stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; margin-bottom: 1.5rem; }
+    .stat-mini { background: var(--blanco); border-radius: var(--r-md); border: 1px solid var(--borde); padding: .9rem 1rem; }
+    .stat-mini-val { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .stat-mini-lbl { font-size: .72rem; color: var(--gris); margin-top: .3rem; }
 
-    .empty-state { text-align: center; padding: 3rem; color: var(--gris); }
-    .empty-state svg { margin: 0 auto 1rem; display: block; opacity: .3; }
+    /* Grid conductores */
+    .conductores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+
+    .c-card { background: var(--blanco); border-radius: var(--r-lg); border: 1px solid var(--borde); overflow: hidden; transition: box-shadow .15s; }
+    .c-card:hover { box-shadow: var(--sombra); }
+
+    .c-card-head { padding: 1.1rem; display: flex; align-items: center; gap: .9rem; border-bottom: 1px solid var(--borde); }
+    .c-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--verde-claro); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--verde-oscuro); flex-shrink: 0; }
+    .c-name { font-weight: 700; font-size: .9rem; }
+    .c-email { font-size: .75rem; color: var(--gris); margin-top: .1rem; }
+
+    .c-card-body { padding: 1rem 1.1rem; }
+    .c-row { display: flex; justify-content: space-between; font-size: .82rem; padding: .3rem 0; border-bottom: 1px solid var(--gris-claro); }
+    .c-row:last-child { border-bottom: none; }
+    .c-row-lbl { color: var(--gris); }
+    .c-row-val { font-weight: 600; }
+
+    .c-docs { padding: .8rem 1.1rem; border-top: 1px solid var(--borde); background: var(--fondo); }
+    .c-docs-title { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--gris); margin-bottom: .5rem; }
+    .doc-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; padding: .2rem .6rem; border-radius: var(--r-full); margin-right: .3rem; margin-bottom: .3rem; font-weight: 600; }
+
+    .c-card-foot { padding: .85rem 1.1rem; display: flex; gap: .5rem; border-top: 1px solid var(--borde); }
+
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--gris); }
+    .empty-ico { font-size: 3rem; margin-bottom: 1rem; opacity: .4; }
+    .empty-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--texto-2); margin-bottom: .4rem; }
+
+    @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+        .sidebar { display: none; }
+        .main { margin-left: 0; }
+        .stats-strip { grid-template-columns: repeat(2, 1fr); }
+        .main-body { padding: 1rem; }
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="admin-layout">
+<div class="layout">
+
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--verde)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
-                goRanch
-            </a>
-            <div class="sidebar-role">Admin Panel</div>
+        <div class="sb-brand">
+            <div class="sb-brand-dot"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div>
+            goRanch Admin
         </div>
-        <nav class="sidebar-nav">
-            <a href="{{ route('admin.dashboard') }}" class="sidebar-item">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                Dashboard
-            </a>
-            <a href="{{ route('admin.conductores') }}" class="sidebar-item active">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>
-                Conductores
-            </a>
-            <a href="{{ route('admin.usuarios') }}" class="sidebar-item">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                Usuarios
-            </a>
-            <a href="{{ route('admin.servicios') }}" class="sidebar-item">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Servicios
-            </a>
-        </nav>
-        <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="sidebar-logout">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Cerrar Sesión
+        <div class="sb-label">Gestión</div>
+        <a href="{{ route('admin.dashboard') }}"   class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+        <a href="{{ route('admin.conductores') }}"  class="sb-item active"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>Conductores
+            @php $pend = \App\Models\Conductor::where('estatus','pendiente')->count(); @endphp
+            @if($pend) <span style="margin-left:auto;background:#ef4444;color:white;border-radius:999px;padding:.1rem .5rem;font-size:.7rem;font-weight:700;">{{ $pend }}</span> @endif
+        </a>
+        <a href="{{ route('admin.usuarios') }}"    class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Usuarios</a>
+        <a href="{{ route('admin.servicios') }}"   class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Servicios</a>
+        <div style="margin-top:auto; padding:1rem; border-top:1px solid rgba(255,255,255,.08);">
+            <form method="POST" action="{{ route('logout') }}">@csrf
+                <button type="submit" class="sb-item" style="width:100%; background:none; border:none; cursor:pointer; color:rgba(255,255,255,.35);">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
                 </button>
             </form>
         </div>
     </aside>
 
-    <div class="main-content">
-        <div class="top-header">
-            <div class="header-title">Conductores</div>
+    <div class="main">
+        <div class="main-header">
+            <div>
+                <div class="main-title">Conductores</div>
+                <div class="main-sub">Gestiona solicitudes y conductores activos</div>
+            </div>
         </div>
 
-        <div class="page-body">
+        <div class="main-body">
+
+            @php
+                $filtro = request('estatus', 'todos');
+                $query  = \App\Models\Conductor::with(['usuario','documentos']);
+                if($filtro !== 'todos') $query->where('estatus', $filtro);
+                $conductores = $query->orderByDesc('id')->get();
+
+                $totales    = \App\Models\Conductor::count();
+                $activos    = \App\Models\Conductor::where('estatus','activo')->count();
+                $pendientes = \App\Models\Conductor::where('estatus','pendiente')->count();
+                $conectados = \App\Models\Conductor::where('esta_conectado', true)->count();
+            @endphp
+
+            {{-- Stats --}}
+            <div class="stats-strip">
+                <div class="stat-mini">
+                    <div class="stat-mini-val">{{ $totales }}</div>
+                    <div class="stat-mini-lbl">Total conductores</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-val" style="color:var(--verde-oscuro);">{{ $activos }}</div>
+                    <div class="stat-mini-lbl">Activos</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-val" style="color:var(--amarillo);">{{ $pendientes }}</div>
+                    <div class="stat-mini-lbl">Pendientes</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-val" style="color:var(--azul);">{{ $conectados }}</div>
+                    <div class="stat-mini-lbl">Conectados ahora</div>
+                </div>
+            </div>
+
+            {{-- Filtros --}}
+            <div class="filters">
+                <a href="?estatus=todos"      class="chip {{ $filtro==='todos'      ?'active':'' }}">Todos ({{ $totales }})</a>
+                <a href="?estatus=pendiente"  class="chip chip-yellow {{ $filtro==='pendiente' ?'active':'' }}">⏳ Pendientes ({{ $pendientes }})</a>
+                <a href="?estatus=activo"     class="chip {{ $filtro==='activo'     ?'active':'' }}">✓ Activos ({{ $activos }})</a>
+                <a href="?estatus=suspendido" class="chip chip-red {{ $filtro==='suspendido' ?'active':'' }}">Suspendidos</a>
+            </div>
+
             @if(session('success'))
                 <div class="alert alert-success" style="margin-bottom:1rem;">{{ session('success') }}</div>
             @endif
 
-            {{-- Filtros --}}
-            <div class="filter-tabs">
-                <a href="{{ route('admin.conductores', ['estatus' => 'pendiente']) }}"
-                    class="filter-tab {{ $estatus === 'pendiente' ? 'active' : '' }}">Pendientes</a>
-                <a href="{{ route('admin.conductores', ['estatus' => 'activo']) }}"
-                    class="filter-tab {{ $estatus === 'activo' ? 'active' : '' }}">Activos</a>
-                <a href="{{ route('admin.conductores', ['estatus' => 'suspendido']) }}"
-                    class="filter-tab {{ $estatus === 'suspendido' ? 'active' : '' }}">Suspendidos</a>
-                <a href="{{ route('admin.conductores', ['estatus' => 'todos']) }}"
-                    class="filter-tab {{ $estatus === 'todos' ? 'active' : '' }}">Todos</a>
-            </div>
-
-            {{-- Grid conductores --}}
-            @if($conductores->count() > 0)
+            {{-- Grid --}}
+            @if($conductores->isEmpty())
+                <div class="empty-state">
+                    <div class="empty-ico">🚗</div>
+                    <div class="empty-title">Sin conductores en este filtro</div>
+                    <p style="font-size:.875rem;">Cambia el filtro o espera nuevas solicitudes.</p>
+                </div>
+            @else
                 <div class="conductores-grid">
-                    @foreach($conductores as $conductor)
-                        <div class="conductor-card">
-                            <div class="conductor-card-header">
-                                <div class="c-avatar">{{ strtoupper(substr($conductor->usuario->nombre ?? 'C', 0, 2)) }}</div>
-                                <div class="c-info-main">
-                                    <strong>{{ $conductor->usuario->nombre ?? 'N/A' }}</strong>
-                                    <span>{{ $conductor->usuario->email ?? '' }}</span>
-                                    <span> • {{ $conductor->usuario->telefono ?? '' }}</span>
+                    @foreach($conductores as $c)
+                        @php
+                            $estClass = ['activo'=>'badge-green','pendiente'=>'badge-yellow','suspendido'=>'badge-red'];
+                            $vehIco   = ['moto'=>'🏍️','bici'=>'🚲','auto'=>'🚗'];
+                        @endphp
+                        <div class="c-card">
+                            <div class="c-card-head">
+                                <div class="c-avatar">{{ strtoupper(substr($c->usuario->nombre ?? 'C', 0, 2)) }}</div>
+                                <div style="flex:1; min-width:0;">
+                                    <div class="c-name">{{ $c->usuario->nombre ?? '—' }}</div>
+                                    <div class="c-email">{{ $c->usuario->email ?? '' }}</div>
                                 </div>
-                                @php $clases = ['pendiente'=>'badge-yellow','activo'=>'badge-green','suspendido'=>'badge-red']; @endphp
-                                <span class="badge {{ $clases[$conductor->estatus] ?? 'badge-gray' }}" style="margin-left:auto;">
-                                    {{ ucfirst($conductor->estatus) }}
-                                </span>
+                                <span class="badge {{ $estClass[$c->estatus] ?? 'badge-gray' }}">{{ ucfirst($c->estatus) }}</span>
                             </div>
 
-                            <div class="conductor-card-body">
-                                <div class="detail-row">
-                                    <span>Vehículo</span>
-                                    <span>{{ ucfirst($conductor->tipo_vehiculo) }} • {{ $conductor->marca }} {{ $conductor->modelo }}</span>
+                            <div class="c-card-body">
+                                <div class="c-row">
+                                    <span class="c-row-lbl">Vehículo</span>
+                                    <span class="c-row-val">{{ $vehIco[$c->tipo_vehiculo] ?? '' }} {{ ucfirst($c->tipo_vehiculo) }}</span>
                                 </div>
-                                <div class="detail-row">
-                                    <span>Placa</span>
-                                    <span>{{ $conductor->placa }}</span>
+                                <div class="c-row">
+                                    <span class="c-row-lbl">Marca / Modelo</span>
+                                    <span class="c-row-val">{{ $c->marca }} {{ $c->modelo }}</span>
                                 </div>
-                                <div class="detail-row">
-                                    <span>Calificación</span>
-                                    <span>⭐ {{ $conductor->calificacion_promedio }}</span>
+                                <div class="c-row">
+                                    <span class="c-row-lbl">Placa</span>
+                                    <span class="c-row-val" style="font-family:monospace; letter-spacing:.08em;">{{ strtoupper($c->placa) }}</span>
                                 </div>
-                                <div class="detail-row">
-                                    <span>Registro</span>
-                                    <span>{{ \Carbon\Carbon::parse($conductor->creado_en)->format('d/m/Y') }}</span>
+                                <div class="c-row">
+                                    <span class="c-row-lbl">Calificación</span>
+                                    <span class="c-row-val">⭐ {{ $c->calificacion_promedio }}</span>
                                 </div>
-
-                                @if($conductor->documentos->count() > 0)
-                                    <div class="docs-row">
-                                        <div class="docs-title">Documentos</div>
-                                        @foreach($conductor->documentos as $doc)
-                                            <div class="doc-item">
-                                                <span>{{ ucfirst($doc->tipo_documento) }}</span>
-                                                <div style="display:flex; align-items:center; gap:.5rem;">
-                                                    <a href="{{ Storage::url($doc->url_archivo) }}" target="_blank">Ver</a>
-                                                    <span class="badge {{ $doc->estaAprobado() ? 'badge-green' : ($doc->estaRechazado() ? 'badge-red' : 'badge-yellow') }}">
-                                                        {{ ucfirst($doc->estatus) }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                <div class="c-row">
+                                    <span class="c-row-lbl">Estado</span>
+                                    <span class="c-row-val">
+                                        @if($c->esta_conectado)
+                                            <span style="color:var(--verde); font-size:.8rem;">● Conectado</span>
+                                        @else
+                                            <span style="color:var(--gris); font-size:.8rem;">○ Desconectado</span>
+                                        @endif
+                                    </span>
+                                </div>
                             </div>
 
-                            @if($conductor->estatus === 'pendiente')
-                                <div class="conductor-card-footer">
-                                    <form method="POST" action="{{ route('admin.conductores.aprobar', $conductor->id) }}" style="flex:1;">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-primary btn-full" style="border-radius:10px; padding:.6rem;">
-                                            ✓ Aprobar
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ route('admin.conductores.rechazar', $conductor->id) }}" style="flex:1;">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-danger btn-full" style="border-radius:10px; padding:.6rem;">
-                                            ✕ Rechazar
-                                        </button>
-                                    </form>
+                            @if($c->documentos->count())
+                                <div class="c-docs">
+                                    <div class="c-docs-title">Documentos</div>
+                                    @foreach($c->documentos as $doc)
+                                        @php
+                                            $dc = ['aprobado'=>'badge-green','pendiente'=>'badge-yellow','rechazado'=>'badge-red'];
+                                        @endphp
+                                        <span class="doc-badge {{ $dc[$doc->estatus] ?? 'badge-gray' }}">
+                                            {{ ucfirst(str_replace('_',' ',$doc->tipo_documento)) }}
+                                        </span>
+                                    @endforeach
                                 </div>
                             @endif
+
+                            <div class="c-card-foot">
+                                @if($c->estatus === 'pendiente')
+                                    <form method="POST" action="{{ route('admin.conductores.aprobar', $c->id) }}" style="flex:1;">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="btn btn-full btn-sm" style="background:var(--verde-bg); color:var(--verde-oscuro); border-radius:var(--r-sm);">✓ Aprobar</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.conductores.rechazar', $c->id) }}" style="flex:1;">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="btn btn-danger btn-full btn-sm" style="border-radius:var(--r-sm);">✕ Rechazar</button>
+                                    </form>
+                                @elseif($c->estatus === 'activo')
+                                    <form method="POST" action="{{ route('admin.conductores.rechazar', $c->id) }}" style="flex:1;">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="btn btn-danger btn-full btn-sm" style="border-radius:var(--r-sm);">Suspender</button>
+                                    </form>
+                                @elseif($c->estatus === 'suspendido')
+                                    <form method="POST" action="{{ route('admin.conductores.aprobar', $c->id) }}" style="flex:1;">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="btn btn-full btn-sm" style="background:var(--verde-bg); color:var(--verde-oscuro); border-radius:var(--r-sm);">Reactivar</button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     @endforeach
                 </div>
-                <div style="margin-top:1.5rem;">{{ $conductores->links() }}</div>
-            @else
-                <div class="empty-state">
-                    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>
-                    <p>No hay conductores {{ $estatus !== 'todos' ? $estatus.'s' : '' }} por el momento.</p>
-                </div>
             @endif
+
         </div>
     </div>
 </div>

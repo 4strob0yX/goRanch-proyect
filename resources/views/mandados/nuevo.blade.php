@@ -3,144 +3,148 @@
 
 @push('styles')
 <style>
-    .page { max-width: 1100px; padding: 2rem; }
-    .mandado-grid { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; margin-top: 1.5rem; }
-    .page-title { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
-    .page-sub { color: var(--gris); margin-top: .3rem; }
+    body { background: var(--fondo); }
+    .navbar { background: var(--blanco); border-bottom: 1px solid var(--gris-claro); padding: .9rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .navbar-brand { display: flex; align-items: center; gap: .5rem; font-family: 'Syne', sans-serif; font-weight: 700; text-decoration: none; color: var(--texto); }
+    .page { max-width: 700px; margin: 0 auto; padding: 1.5rem; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: .3rem; }
+    .page-sub { color: var(--gris); margin-bottom: 1.5rem; }
 
-    /* Lista izquierda */
-    .add-item-row { display: flex; gap: .8rem; margin-bottom: 1.5rem; }
-    .add-item-row .form-input { flex: 1; border-radius: 12px; padding: .8rem 1rem; border: 1.5px solid var(--gris-claro); font-family: 'DM Sans',sans-serif; font-size: .95rem; outline: none; }
-    .add-item-row .form-input:focus { border-color: var(--verde); }
+    /* Artículos */
+    .add-row { display: flex; gap: .6rem; margin-bottom: 1.2rem; }
+    .add-row input { flex: 1; padding: .7rem 1rem; border: 1.5px solid var(--gris-claro); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: .9rem; outline: none; background: white; }
+    .add-row input:focus { border-color: var(--verde); }
+    .add-row input.qty-input { max-width: 70px; text-align: center; }
+    .btn-add { background: var(--verde); color: white; border: none; border-radius: 10px; padding: .7rem 1.1rem; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'DM Sans', sans-serif; }
 
-    .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .8rem; }
-    .list-count { font-weight: 700; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; }
-    .borrar-todo { color: var(--rojo); font-size: .875rem; font-weight: 600; background: none; border: none; cursor: pointer; }
+    .items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .7rem; font-size: .85rem; }
+    .items-header strong { font-weight: 700; }
+    .btn-clear { background: none; border: none; color: #ef4444; font-size: .82rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
-    .item-card { display: flex; align-items: center; gap: 1rem; background: var(--blanco); border-radius: 12px; padding: .9rem 1rem; margin-bottom: .6rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
-    .item-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--gris-claro); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-    .item-check.checked { background: var(--verde); border-color: var(--verde); }
-    .item-info { flex: 1; }
-    .item-info strong { font-weight: 600; display: block; font-size: .95rem; }
-    .item-info span { font-size: .8rem; color: var(--gris); }
-    .qty-controls { display: flex; align-items: center; gap: .5rem; }
-    .qty-btn { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid var(--gris-claro); background: var(--blanco); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; }
-    .qty-num { font-weight: 600; min-width: 20px; text-align: center; }
-    .delete-btn { background: none; border: none; cursor: pointer; color: var(--gris-claro); }
-    .delete-btn:hover { color: var(--rojo); }
+    .item-row { display: flex; align-items: center; gap: .8rem; background: white; border-radius: 10px; padding: .7rem 1rem; margin-bottom: .5rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .item-nombre { flex: 1; font-weight: 600; font-size: .9rem; }
+    .item-qty { display: flex; align-items: center; gap: .4rem; }
+    .qty-btn { width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid var(--gris-claro); background: white; cursor: pointer; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+    .qty-num { min-width: 22px; text-align: center; font-weight: 600; }
+    .btn-del { background: none; border: none; cursor: pointer; color: var(--gris-claro); padding: 0; }
+    .btn-del:hover { color: #ef4444; }
 
-    /* Panel derecho */
-    .detalles-panel { background: var(--blanco); border-radius: 20px; box-shadow: var(--sombra); padding: 1.5rem; height: fit-content; }
-    .detalles-title { display: flex; align-items: center; gap: .5rem; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 1.2rem; }
-    .total-row { display: flex; justify-content: space-between; font-size: .9rem; color: var(--gris); margin-bottom: 1.2rem; padding-top: .8rem; border-top: 1px solid var(--gris-claro); }
-    .total-num { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--texto); font-size: 1rem; }
+    .empty-list { text-align: center; padding: 2rem; color: var(--gris); font-size: .875rem; background: white; border-radius: 10px; border: 2px dashed var(--gris-claro); }
 
-    .tip-card { background: var(--verde-bg); border-radius: 12px; padding: .9rem 1rem; margin-top: 1rem; display: flex; gap: .7rem; }
-    .tip-icon { width: 24px; height: 24px; border-radius: 50%; background: var(--verde); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: .1rem; }
-    .tip-text strong { font-size: .875rem; font-weight: 600; color: var(--verde-oscuro); }
-    .tip-text p { font-size: .8rem; color: var(--gris); margin-top: .2rem; line-height: 1.4; }
+    /* Sección envío */
+    .section-card { background: white; border-radius: 16px; box-shadow: var(--sombra); padding: 1.3rem; margin-bottom: 1rem; }
+    .section-label { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
+    .campo-label { font-size: .82rem; font-weight: 600; color: var(--gris); margin-bottom: .3rem; }
 
-    @media (max-width: 768px) {
-        .mandado-grid { grid-template-columns: 1fr; }
-    }
+    .error-box { background: #fee2e2; border-radius: 10px; padding: .8rem 1rem; font-size: .85rem; color: #991b1b; margin-bottom: 1rem; }
 </style>
 @endpush
 
 @section('content')
 <nav class="navbar">
     <a href="{{ route('dashboard') }}" class="navbar-brand">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--verde)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
-        goRanch
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
     </a>
-    <div class="navbar-nav">
-        <a href="{{ route('dashboard') }}" class="nav-link">Inicio</a>
-        <a href="#" class="nav-link">Mis Viajes</a>
-        <a href="{{ route('perfil') }}" class="nav-link">Perfil</a>
-        <a href="#" class="nav-link">Ayuda</a>
-        <div class="avatar-placeholder">{{ strtoupper(substr(auth()->user()->nombre, 0, 1)) }}</div>
-    </div>
+    <span style="font-family:'Syne',sans-serif; font-weight:700;">Nuevo Mandado</span>
+    <div style="width:20px;"></div>
 </nav>
 
-<div class="page" style="margin: 0 auto;">
-    <h1 class="page-title">Crea tu lista de mandados</h1>
-    <p class="page-sub">Agrega los artículos que necesitas que compremos o recojamos por ti.</p>
+<div class="page">
+    <h1 class="page-title">¿Qué necesitas?</h1>
+    <p class="page-sub">Agrega los artículos y te lo traemos.</p>
 
-    <div class="mandado-grid">
-        {{-- Lista de artículos --}}
-        <div>
-            <form id="mandado-form" method="POST" action="{{ route('mandado.store') }}">
-                @csrf
+    @if($errors->any())
+        <div class="error-box">{{ $errors->first() }}</div>
+    @endif
 
-                <div class="add-item-row">
-                    <input type="text" id="nuevo-articulo" class="form-input" placeholder="Ej: 2 costales de maíz, medicina...">
-                    <input type="text" id="nuevo-detalle" class="form-input" placeholder="Detalle (opcional)" style="max-width:160px;">
-                    <button type="button" class="btn btn-primary" style="border-radius:12px; white-space:nowrap;" onclick="agregarArticulo()">
-                        + Agregar
-                    </button>
-                </div>
-
-                <div class="list-header">
-                    <span class="list-count">Tu Lista (<span id="count">0</span>)</span>
-                    <button type="button" class="borrar-todo" onclick="borrarTodo()">Borrar todo</button>
-                </div>
-
-                <div id="items-list">
-                    {{-- Items dinámicos --}}
-                </div>
-
-                <input type="hidden" name="items_json" id="items-json">
-            </form>
+    {{-- 1. Lista de artículos (UI dinámica, se serializa antes de enviar) --}}
+    <div class="section-card">
+        <div class="section-label">
+            🛒 Tu lista
         </div>
 
-        {{-- Panel detalles --}}
-        <div>
-            <div class="detalles-panel">
-                <div class="detalles-title">
-                    <div style="width:22px; height:22px; border-radius:50%; background:var(--verde); display:flex; align-items:center; justify-content:center;">
-                        <svg width="12" height="12" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-                    </div>
-                    Detalles del Mandado
-                </div>
+        <div class="add-row">
+            <input type="text" id="inp-nombre" placeholder="Artículo (ej: Tortillas 1kg)" maxlength="100">
+            <input type="number" id="inp-qty" class="qty-input" value="1" min="1" max="99">
+            <button type="button" class="btn-add" onclick="agregarItem()">+ Agregar</button>
+        </div>
 
-                <div class="form-group">
-                    <label class="form-label">¿Dónde lo compramos? <span style="color:var(--rojo);">*</span></label>
-                    <div class="input-wrap">
-                        <span class="input-icon">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                        </span>
-                        <input type="text" name="tienda" form="mandado-form" class="form-input" placeholder="Ej: Ferretería El Rancho, Tienda de Don Pedro">
-                    </div>
-                </div>
+        <div class="items-header">
+            <strong>Lista (<span id="items-count">0</span>)</strong>
+            <button type="button" class="btn-clear" onclick="limpiarLista()">Borrar todo</button>
+        </div>
 
-                <div class="form-group">
-                    <label class="form-label">Instrucciones especiales</label>
-                    <textarea name="instrucciones" form="mandado-form" rows="4"
-                        style="width:100%; border:1.5px solid var(--gris-claro); border-radius:10px; padding:.8rem; font-family:'DM Sans',sans-serif; font-size:.875rem; outline:none; resize:none;"
-                        placeholder="Ej: Si no hay de la marca X, compra de la marca Y. Preguntar por el descuento de mayoreo."></textarea>
-                    <p style="font-size:.75rem; color:var(--gris); margin-top:.3rem;">El conductor verá estas notas al aceptar el viaje.</p>
-                </div>
-
-                <div class="total-row">
-                    <span>Total de artículos</span>
-                    <span class="total-num" id="total-count">0</span>
-                </div>
-
-                <button type="submit" form="mandado-form" class="btn btn-dark btn-full" style="border-radius:12px; padding:1rem; font-size:1rem;" onclick="prepararEnvio()">
-                    Pedir Mandado →
-                </button>
-
-                <div class="tip-card">
-                    <div class="tip-icon">
-                        <svg width="12" height="12" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    </div>
-                    <div class="tip-text">
-                        <strong>Tip Rápido</strong>
-                        <p>Sé específico con las marcas y tamaños para asegurar que traigamos exactamente lo que necesitas.</p>
-                    </div>
-                </div>
-            </div>
+        <div id="items-list">
+            <div class="empty-list" id="empty-msg">Aún no has agregado artículos.</div>
         </div>
     </div>
+
+    {{-- 2. Formulario real que se envía --}}
+    <form id="mandado-form" method="POST" action="{{ route('mandado.store') }}">
+        @csrf
+
+        {{-- Campos ocultos de ítems — se llenan con JS antes del submit --}}
+        <div id="hidden-items"></div>
+
+        {{-- Dirección --}}
+        <div class="section-card">
+            <div class="section-label">📍 ¿A dónde lo llevamos?</div>
+
+            <div class="form-group">
+                <div class="campo-label">Punto de origen (donde compramos)</div>
+                <select name="direccion_origen" class="form-input no-icon @error('direccion_origen') error @enderror" required>
+                    <option value="">Selecciona el punto más cercano...</option>
+                    @foreach($puntos as $punto)
+                        <option value="{{ $punto->nombre }}"
+                            data-lat="{{ $punto->lat }}"
+                            data-lng="{{ $punto->lng }}">
+                            📍 {{ $punto->nombre }} — {{ $punto->direccion }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('direccion_origen') <p class="form-error">{{ $message }}</p> @enderror
+            </div>
+
+            <div class="form-group">
+                <div class="campo-label">Dirección de entrega</div>
+                <input type="text" name="direccion_destino" class="form-input no-icon @error('direccion_destino') error @enderror"
+                    placeholder="Tu calle, colonia, referencia..." value="{{ old('direccion_destino') }}" required>
+                @error('direccion_destino') <p class="form-error">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Coordenadas ocultas --}}
+            <input type="hidden" name="lat_origen" id="lat_origen" value="20.5000">
+            <input type="hidden" name="lng_origen" id="lng_origen" value="-100.3500">
+            <input type="hidden" name="lat_destino" id="lat_destino" value="20.4950">
+            <input type="hidden" name="lng_destino" id="lng_destino" value="-100.3550">
+        </div>
+
+        {{-- Pago --}}
+        <div class="section-card">
+            <div class="section-label">💳 Método de pago</div>
+            <div style="display:flex; gap:.8rem;">
+                <label style="flex:1; cursor:pointer;">
+                    <input type="radio" name="metodo_pago" value="efectivo" checked style="display:none;" id="pago-efectivo">
+                    <div class="pago-opt" id="opt-efectivo" style="border:2px solid var(--verde); border-radius:12px; padding:.9rem; text-align:center; background:var(--verde-bg);">
+                        <div style="font-size:1.3rem;">💵</div>
+                        <div style="font-weight:700; font-size:.9rem; margin-top:.3rem;">Efectivo</div>
+                    </div>
+                </label>
+                <label style="flex:1; cursor:pointer;">
+                    <input type="radio" name="metodo_pago" value="billetera" style="display:none;" id="pago-billetera">
+                    <div class="pago-opt" id="opt-billetera" style="border:2px solid var(--gris-claro); border-radius:12px; padding:.9rem; text-align:center;">
+                        <div style="font-size:1.3rem;">👛</div>
+                        <div style="font-weight:700; font-size:.9rem; margin-top:.3rem;">Billetera</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="border-radius:14px; padding:1.1rem; font-size:1rem; margin-bottom:2rem;"
+            onclick="return prepararEnvio()">
+            Pedir Mandado →
+        </button>
+    </form>
 </div>
 
 @push('scripts')
@@ -148,67 +152,105 @@
 let items = [];
 
 function renderItems() {
-    const list = document.getElementById('items-list');
-    const count = document.getElementById('count');
-    const total = document.getElementById('total-count');
+    const list   = document.getElementById('items-list');
+    const empty  = document.getElementById('empty-msg');
+    const counter = document.getElementById('items-count');
+    counter.textContent = items.length;
 
-    count.textContent = items.length;
-    total.textContent = items.reduce((s, i) => s + i.qty, 0);
+    if (items.length === 0) {
+        list.innerHTML = '<div class="empty-list" id="empty-msg">Aún no has agregado artículos.</div>';
+        return;
+    }
 
-    list.innerHTML = items.map((item, idx) => `
-        <div class="item-card">
-            <div class="item-check checked" onclick="toggleCheck(${idx})">
-                <svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    list.innerHTML = items.map((item, i) => `
+        <div class="item-row">
+            <div class="item-nombre">${item.nombre}</div>
+            <div class="item-qty">
+                <button class="qty-btn" type="button" onclick="cambiarQty(${i}, -1)">−</button>
+                <span class="qty-num">${item.cantidad}</span>
+                <button class="qty-btn" type="button" onclick="cambiarQty(${i}, 1)">+</button>
             </div>
-            <div class="item-info">
-                <strong>${item.nombre}</strong>
-                ${item.detalle ? `<span>${item.detalle}</span>` : ''}
-            </div>
-            <div class="qty-controls">
-                <button class="qty-btn" type="button" onclick="changeQty(${idx}, -1)">−</button>
-                <span class="qty-num">${item.qty}</span>
-                <button class="qty-btn" type="button" onclick="changeQty(${idx}, 1)">+</button>
-            </div>
-            <button class="delete-btn" type="button" onclick="deleteItem(${idx})">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            <button class="btn-del" type="button" onclick="eliminarItem(${i})">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
             </button>
         </div>
     `).join('');
 }
 
-function agregarArticulo() {
-    const nombre = document.getElementById('nuevo-articulo').value.trim();
-    const detalle = document.getElementById('nuevo-detalle').value.trim();
-    if (!nombre) return;
-    items.push({ nombre, detalle, qty: 1 });
-    document.getElementById('nuevo-articulo').value = '';
-    document.getElementById('nuevo-detalle').value = '';
+function agregarItem() {
+    const nombre = document.getElementById('inp-nombre').value.trim();
+    const qty    = parseInt(document.getElementById('inp-qty').value) || 1;
+    if (!nombre) { document.getElementById('inp-nombre').focus(); return; }
+    items.push({ nombre, cantidad: qty, precio_est: 0 });
+    document.getElementById('inp-nombre').value = '';
+    document.getElementById('inp-qty').value = 1;
+    document.getElementById('inp-nombre').focus();
     renderItems();
 }
 
-function changeQty(idx, delta) {
-    items[idx].qty = Math.max(1, items[idx].qty + delta);
+function cambiarQty(i, delta) {
+    items[i].cantidad = Math.max(1, items[i].cantidad + delta);
     renderItems();
 }
 
-function deleteItem(idx) {
-    items.splice(idx, 1);
+function eliminarItem(i) {
+    items.splice(i, 1);
     renderItems();
 }
 
-function borrarTodo() {
+function limpiarLista() {
     items = [];
     renderItems();
 }
 
-function prepararEnvio() {
-    document.getElementById('items-json').value = JSON.stringify(items);
-}
+// Actualizar coordenadas al elegir punto de origen
+document.querySelector('select[name="direccion_origen"]').addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    if (opt.dataset.lat) {
+        document.getElementById('lat_origen').value = opt.dataset.lat;
+        document.getElementById('lng_origen').value = opt.dataset.lng;
+        // Aproximar destino ligeramente diferente
+        document.getElementById('lat_destino').value = (parseFloat(opt.dataset.lat) - 0.005).toFixed(6);
+        document.getElementById('lng_destino').value = (parseFloat(opt.dataset.lng) - 0.005).toFixed(6);
+    }
+});
 
 // Enter para agregar
-document.getElementById('nuevo-articulo').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); agregarArticulo(); }
+document.getElementById('inp-nombre').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); agregarItem(); }
 });
+
+// Pago visual toggle
+document.querySelectorAll('input[name="metodo_pago"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.getElementById('opt-efectivo').style.border  = '2px solid var(--gris-claro)';
+        document.getElementById('opt-efectivo').style.background = 'white';
+        document.getElementById('opt-billetera').style.border = '2px solid var(--gris-claro)';
+        document.getElementById('opt-billetera').style.background = 'white';
+        const sel = document.querySelector('input[name="metodo_pago"]:checked').value;
+        document.getElementById('opt-' + sel).style.border = '2px solid var(--verde)';
+        document.getElementById('opt-' + sel).style.background = 'var(--verde-bg)';
+    });
+});
+
+// Antes de enviar: inyectar ítems como campos array
+function prepararEnvio() {
+    if (items.length === 0) {
+        alert('Agrega al menos un artículo a tu lista.');
+        return false;
+    }
+
+    const container = document.getElementById('hidden-items');
+    container.innerHTML = '';
+    items.forEach((item, i) => {
+        container.innerHTML += `
+            <input type="hidden" name="items[${i}][nombre]"    value="${item.nombre}">
+            <input type="hidden" name="items[${i}][cantidad]"  value="${item.cantidad}">
+            <input type="hidden" name="items[${i}][precio_est]" value="0">
+        `;
+    });
+    return true;
+}
 </script>
 @endpush
 @endsection

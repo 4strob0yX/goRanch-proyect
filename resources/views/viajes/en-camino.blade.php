@@ -1,149 +1,143 @@
 @extends('layouts.app')
-@section('title', 'En Camino - goRanch')
+@section('title', 'Viaje en Camino - goRanch')
 
 @push('styles')
 <style>
-    body { overflow: hidden; }
-    .map-container { position: fixed; inset: 0; background: #e8e0d0; }
-    .map-bg { width:100%; height:100%; background:linear-gradient(135deg, #e8e4d8 0%, #d4cdb8 100%); }
-    .map-river { position:absolute; background:#89bdd3; border-radius:999px; }
-    .status-chip {
-        position:absolute; top:80px; left:50%; transform:translateX(-50%);
-        background:var(--blanco); border-radius:999px; padding:.5rem 1.2rem;
-        display:flex; align-items:center; gap:.6rem; font-weight:600; font-size:.9rem;
-        box-shadow: var(--sombra); z-index:10; white-space:nowrap;
+    body { background: var(--verde-oscuro); min-height: 100vh; }
+    body::before { display: none; }
+
+    .top-bar { padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .back-link { color: rgba(255,255,255,.5); text-decoration: none; font-size: .875rem; display: flex; align-items: center; gap: .4rem; }
+    .back-link:hover { color: white; }
+    .viaje-id { font-size: .75rem; color: rgba(255,255,255,.3); }
+
+    /* Mapa simulado */
+    .map-area {
+        margin: 0 1.5rem;
+        border-radius: var(--r-xl);
+        overflow: hidden;
+        height: 200px;
+        background: linear-gradient(135deg, #1e3d12 0%, #2d5a1b 50%, #1e3d12 100%);
+        position: relative;
+        border: 1px solid rgba(255,255,255,.08);
     }
-    .status-dot { width:10px; height:10px; border-radius:50%; background:var(--verde); animation:pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
-
-    .map-navbar { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; background:var(--blanco); border-bottom:1px solid var(--gris-claro); z-index:10; }
-    .map-navbar-brand { font-family:'Syne',sans-serif; font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:.5rem; text-decoration:none; color:var(--texto); }
-
-    .map-controls { position:absolute; right:1rem; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:.5rem; z-index:5; }
-    .map-ctrl-btn { width:40px; height:40px; background:var(--blanco); border-radius:50%; box-shadow:var(--sombra); display:flex; align-items:center; justify-content:center; cursor:pointer; border:none; color:var(--texto); font-size:1.2rem; font-weight:700; }
-
-    /* Panel conductor */
-    .conductor-panel {
-        position:absolute; bottom:0; left:50%; transform:translateX(-50%);
-        width:100%; max-width:520px;
-        background:var(--blanco); border-radius:24px 24px 0 0;
-        padding:1.5rem 1.8rem 2rem;
-        box-shadow:0 -8px 32px rgba(0,0,0,.12); z-index:10;
+    .map-grid {
+        position: absolute; inset: 0;
+        background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+        background-size: 40px 40px;
     }
-    .panel-handle { width:40px; height:4px; background:var(--gris-claro); border-radius:999px; margin:0 auto 1.5rem; }
-    .conductor-avatar { width:70px; height:70px; border-radius:50%; background:var(--verde-claro); margin:0 auto .5rem; display:flex; align-items:center; justify-content:center; font-size:1.8rem; position:relative; }
-    .conductor-rating { position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.75); color:white; border-radius:999px; padding:.1rem .5rem; font-size:.75rem; font-weight:600; white-space:nowrap; }
-    .conductor-name { font-family:'Syne',sans-serif; font-weight:700; font-size:1.2rem; text-align:center; margin-bottom:.3rem; }
-    .conductor-verified { display:flex; justify-content:center; margin-bottom:1rem; }
-    .verified-badge { background:var(--verde-claro); color:var(--verde-oscuro); font-size:.8rem; font-weight:600; padding:.2rem .8rem; border-radius:999px; }
-    .vehicle-row { background:var(--fondo); border-radius:12px; padding:.9rem 1rem; display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; }
-    .vehicle-info { display:flex; align-items:center; gap:.7rem; }
-    .vehicle-icon { width:38px; height:38px; background:var(--gris-claro); border-radius:10px; display:flex; align-items:center; justify-content:center; }
-    .vehicle-details strong { display:block; font-weight:600; font-size:.9rem; }
-    .vehicle-details span { font-size:.8rem; color:var(--gris); }
-    .llegada { text-align:right; }
-    .llegada .llegada-label { font-size:.75rem; color:var(--gris); text-transform:uppercase; letter-spacing:.05em; }
-    .llegada .llegada-hora { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; }
-    .action-btns { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-bottom:.8rem; }
-    .action-btn { display:flex; flex-direction:column; align-items:center; gap:.4rem; background:none; border:none; cursor:pointer; }
-    .action-btn-circle { width:52px; height:52px; border-radius:50%; background:var(--verde); display:flex; align-items:center; justify-content:center; }
-    .action-btn span { font-size:.8rem; color:var(--gris); }
-    .bottom-links-row { display:flex; justify-content:space-between; font-size:.85rem; }
-    .bottom-links-row a { color:var(--gris); text-decoration:none; display:flex; align-items:center; gap:.3rem; }
-    .bottom-links-row a:hover { color:var(--texto); }
+    .map-route { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .map-pin-a { position: absolute; left: 25%; top: 60%; font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+    .map-pin-b { position: absolute; right: 20%; top: 30%; font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+    .map-car { position: absolute; left: 45%; top: 48%; font-size: 1.4rem; animation: drive 3s ease-in-out infinite alternate; filter: drop-shadow(0 2px 6px rgba(74,222,128,.4)); }
+    @keyframes drive { from { left: 38%; top: 52%; } to { left: 52%; top: 44%; } }
+    .map-line { position: absolute; left: 25%; top: 30%; right: 18%; bottom: 25%; border: 2px dashed rgba(74,222,128,.35); border-radius: 50% 20% 50% 20%; }
+
+    /* Info panel */
+    .info-panel { background: var(--blanco); border-radius: var(--r-xl) var(--r-xl) 0 0; margin-top: 1.5rem; padding: 1.5rem; min-height: calc(100vh - 360px); }
+
+    .status-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+    .status-badge-live { display: flex; align-items: center; gap: .5rem; background: var(--verde-bg); border: 1px solid var(--verde-claro); border-radius: var(--r-full); padding: .35rem .9rem; font-size: .82rem; font-weight: 700; color: var(--verde-oscuro); }
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--verde); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+    .eta-text { font-size: .82rem; color: var(--gris); }
+    .eta-num { font-family: var(--font-display); font-weight: 700; color: var(--verde-oscuro); font-size: 1rem; }
+
+    /* Ruta visual */
+    .ruta-visual { display: flex; gap: .9rem; margin-bottom: 1.5rem; }
+    .ruta-dots { display: flex; flex-direction: column; align-items: center; gap: 0; padding-top: .1rem; }
+    .dot-origen { width: 10px; height: 10px; border-radius: 50%; background: var(--verde); border: 2px solid white; box-shadow: 0 0 0 2px var(--verde-claro); }
+    .dot-line { width: 2px; flex: 1; background: var(--borde); margin: 3px 0; min-height: 20px; }
+    .dot-destino { width: 10px; height: 10px; border-radius: 50%; background: var(--rojo); border: 2px solid white; box-shadow: 0 0 0 2px #fecaca; }
+    .ruta-text { flex: 1; }
+    .ruta-from { font-weight: 600; font-size: .9rem; color: var(--texto); margin-bottom: .3rem; }
+    .ruta-mid-space { height: 16px; }
+    .ruta-to { font-weight: 600; font-size: .9rem; color: var(--texto); }
+    .ruta-sub { font-size: .75rem; color: var(--gris); }
+
+    /* Conductor card */
+    .conductor-card { display: flex; align-items: center; gap: 1rem; background: var(--fondo); border-radius: var(--r-md); padding: 1rem; margin-bottom: 1.2rem; border: 1px solid var(--borde); }
+    .c-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--verde-claro); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; color: var(--verde-oscuro); flex-shrink: 0; }
+    .c-name { font-weight: 700; font-size: .95rem; }
+    .c-vehicle { font-size: .78rem; color: var(--gris); margin-top: .15rem; }
+    .c-rating { font-size: .78rem; color: var(--amarillo); font-weight: 700; margin-top: .1rem; }
+    .c-actions { margin-left: auto; display: flex; gap: .5rem; }
+    .icon-btn { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--borde); background: var(--blanco); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--gris); text-decoration: none; }
+    .icon-btn:hover { border-color: var(--verde); color: var(--verde); }
+
+    /* Monto */
+    .monto-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-top: 1px solid var(--borde); }
+    .monto-lbl { font-size: .85rem; color: var(--gris); }
+    .monto-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--verde-oscuro); }
 </style>
 @endpush
 
 @section('content')
-<div class="map-container">
-    <div class="map-bg" style="position:relative;">
-        <div class="map-river" style="width:18px; height:55%; top:0; left:60%; transform:rotate(8deg);"></div>
-    </div>
+<div class="top-bar">
+    <a href="{{ route('dashboard') }}" class="back-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Inicio
+    </a>
+    <span class="viaje-id">Viaje #{{ $servicio->id }}</span>
+</div>
 
-    {{-- Status chip --}}
-    <div class="status-chip">
-        <div class="status-dot"></div>
-        En camino...
-    </div>
+<div class="map-area">
+    <div class="map-grid"></div>
+    <div class="map-line"></div>
+    <div class="map-pin-a">🟢</div>
+    <div class="map-pin-b">🔴</div>
+    <div class="map-car">🚗</div>
+</div>
 
-    {{-- Navbar --}}
-    <div class="map-navbar">
-        <a href="{{ route('dashboard') }}" class="map-navbar-brand">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--verde)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
-            goRanch
-        </a>
-        <div style="display:flex; align-items:center; gap:1rem;">
-            <a href="#" style="color:var(--gris); font-size:.9rem; text-decoration:none; display:flex; align-items:center; gap:.3rem;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                Ayuda
-            </a>
-            <div style="width:34px; height:34px; border-radius:50%; background:var(--verde-claro);"></div>
+<div class="info-panel">
+    <div class="status-row">
+        <div class="status-badge-live">
+            <div class="pulse"></div>
+            {{ $servicio->estatus === 'en_ruta' ? 'En camino' : 'Conductor llegando' }}
+        </div>
+        <div>
+            <div class="eta-text">ETA estimado</div>
+            <div class="eta-num">~8 min</div>
         </div>
     </div>
 
-    {{-- Map controls --}}
-    <div class="map-controls">
-        <button class="map-ctrl-btn">+</button>
-        <button class="map-ctrl-btn">−</button>
-        <button class="map-ctrl-btn" style="font-size:.8rem;">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+    {{-- Ruta --}}
+    <div class="ruta-visual">
+        <div class="ruta-dots">
+            <div class="dot-origen"></div>
+            <div class="dot-line"></div>
+            <div class="dot-destino"></div>
+        </div>
+        <div class="ruta-text">
+            <div class="ruta-from">{{ $servicio->direccion_origen }}</div>
+            <div class="ruta-sub">Punto de partida</div>
+            <div class="ruta-mid-space"></div>
+            <div class="ruta-to">{{ $servicio->direccion_destino }}</div>
+            <div class="ruta-sub">Tu destino</div>
+        </div>
     </div>
 
-    {{-- Panel conductor --}}
-    <div class="conductor-panel">
-        <div class="panel-handle"></div>
-
-        <div class="conductor-avatar">
-            🧑‍🦱
-            <div class="conductor-rating">4.8 ⭐</div>
-        </div>
-        <div class="conductor-name">{{ $conductor->usuario->nombre ?? 'Luis G.' }}</div>
-        <div class="conductor-verified">
-            <span class="verified-badge">Conductor Verificado</span>
-        </div>
-
-        <div class="vehicle-row">
-            <div class="vehicle-info">
-                <div class="vehicle-icon">
-                    <svg width="20" height="20" fill="none" stroke="var(--gris)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m-4 12h8a2 2 0 002-2v-6a2 2 0 00-2-2h-8"/></svg>
-                </div>
-                <div class="vehicle-details">
-                    <strong>{{ $conductor->modelo ?? 'Moto Italika 150' }}</strong>
-                    <span>Placa {{ $conductor->placa ?? 'XJ-99' }}</span>
-                </div>
+    {{-- Conductor --}}
+    @if($servicio->conductor)
+        <div class="conductor-card">
+            <div class="c-avatar">{{ strtoupper(substr($servicio->conductor->usuario->nombre ?? 'C', 0, 2)) }}</div>
+            <div>
+                <div class="c-name">{{ $servicio->conductor->usuario->nombre ?? 'Conductor' }}</div>
+                <div class="c-vehicle">{{ ucfirst($servicio->conductor->tipo_vehiculo) }} · {{ $servicio->conductor->placa }}</div>
+                <div class="c-rating">⭐ {{ $servicio->conductor->calificacion_promedio }}</div>
             </div>
-            <div class="llegada">
-                <div class="llegada-label">Llegada est.</div>
-                <div class="llegada-hora">12:45 PM</div>
+            <div class="c-actions">
+                <a href="tel:" class="icon-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.81a2 2 0 012-2.18H8a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L9.91 15a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                </a>
             </div>
         </div>
+    @endif
 
-        <div class="action-btns">
-            <div class="action-btn">
-                <div class="action-btn-circle">
-                    <svg width="22" height="22" fill="white" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                </div>
-                <span>Llamar</span>
-            </div>
-            <div class="action-btn">
-                <div class="action-btn-circle">
-                    <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                </div>
-                <span>Mensaje</span>
-            </div>
-        </div>
-
-        <div class="bottom-links-row">
-            <a href="#">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                Compartir mi viaje
-            </a>
-            <a href="#">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Reportar problema
-            </a>
-        </div>
+    <div class="monto-row">
+        <div class="monto-lbl">Total estimado · {{ ucfirst($servicio->metodo_pago) }}</div>
+        <div class="monto-val">${{ number_format($servicio->total_final, 2) }}</div>
     </div>
 </div>
 @endsection

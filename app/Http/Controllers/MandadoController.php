@@ -17,7 +17,13 @@ class MandadoController extends Controller
 
     public function nuevo()
     {
-        $puntos = PuntoRecoleccion::where('activo', true)->get();
+        $puntos = DB::table('puntos_recoleccion')
+            ->where('activo', true)
+            ->select('id', 'nombre', 'direccion',
+                DB::raw('ST_Y(ubicacion) as lat'),
+                DB::raw('ST_X(ubicacion) as lng'))
+            ->get();
+
         return view('mandados.nuevo', compact('puntos'));
     }
 

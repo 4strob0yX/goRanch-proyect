@@ -4,172 +4,167 @@
 @push('styles')
 <style>
     body { background: var(--fondo); }
-    .top-bar { background: white; border-bottom: 1px solid var(--gris-claro); padding: 1rem 1.5rem; display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; z-index: 40; }
-    .btn-back { background: none; border: none; color: var(--texto); cursor: pointer; display: flex; align-items: center; text-decoration: none; }
-    .top-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; }
+    .top-nav { background: var(--blanco); border-bottom: 1px solid var(--borde); height: 56px; padding: 0 1.2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .back-btn { color: var(--gris); text-decoration: none; display: flex; align-items: center; gap: .4rem; font-size: .875rem; }
+    .top-title { font-family: var(--font-display); font-weight: 700; }
 
-    .page-body { padding: 1.5rem; max-width: 600px; margin: 0 auto; }
+    .page-body { max-width: 560px; margin: 0 auto; padding: 1.5rem; }
 
-    .stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin-bottom: 1.5rem; }
-    .strip-card { background: white; border-radius: 14px; padding: 1rem; text-align: center; box-shadow: var(--sombra); }
-    .strip-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; }
-    .strip-label { font-size: .75rem; color: var(--gris); margin-top: .2rem; }
+    /* Stats strip */
+    .stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-bottom: 1.5rem; }
+    .sc { background: var(--blanco); border-radius: var(--r-md); border: 1px solid var(--borde); padding: .8rem; text-align: center; }
+    .sc-val { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--verde-oscuro); }
+    .sc-lbl { font-size: .7rem; color: var(--gris); margin-top: .15rem; }
 
-    .filter-row { display: flex; gap: .5rem; margin-bottom: 1.2rem; overflow-x: auto; padding-bottom: .3rem; }
-    .filter-chip { padding: .4rem 1rem; border-radius: 999px; font-size: .82rem; font-weight: 600; border: 1.5px solid var(--gris-claro); color: var(--gris); background: white; white-space: nowrap; text-decoration: none; transition: all .15s; }
-    .filter-chip:hover { border-color: var(--verde); color: var(--verde); }
-    .filter-chip.active { background: var(--verde-oscuro); border-color: var(--verde-oscuro); color: white; }
+    /* Filtros */
+    .filters { display: flex; gap: .4rem; margin-bottom: 1.2rem; overflow-x: auto; padding-bottom: .2rem; }
+    .filters::-webkit-scrollbar { display: none; }
+    .chip { padding: .4rem .9rem; border-radius: var(--r-full); font-size: .8rem; font-weight: 600; border: 1.5px solid var(--borde); background: var(--blanco); color: var(--gris); cursor: pointer; white-space: nowrap; transition: all .15s; }
+    .chip:hover { border-color: var(--verde-claro); color: var(--verde-oscuro); }
+    .chip.active { background: var(--verde-oscuro); color: white; border-color: var(--verde-oscuro); }
 
-    .viaje-card { background: white; border-radius: 16px; box-shadow: var(--sombra); margin-bottom: .9rem; overflow: hidden; }
-    .viaje-header { padding: 1rem 1.2rem; display: flex; justify-content: space-between; align-items: flex-start; }
-    .viaje-tipo-row { display: flex; align-items: center; gap: .6rem; }
-    .viaje-tipo-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-    .viaje-tipo-label { font-weight: 700; font-size: .9rem; }
-    .viaje-fecha { font-size: .78rem; color: var(--gris); margin-top: .1rem; }
-    .viaje-monto { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--verde-oscuro); }
+    /* Viaje card */
+    .viaje-card { background: var(--blanco); border-radius: var(--r-lg); border: 1px solid var(--borde); padding: 1.1rem; margin-bottom: .8rem; transition: box-shadow .15s; }
+    .viaje-card:hover { box-shadow: var(--sombra-sm); }
 
-    .viaje-ruta { padding: 0 1.2rem .9rem; }
-    .ruta-line { display: flex; align-items: flex-start; gap: .7rem; }
-    .ruta-dots { display: flex; flex-direction: column; align-items: center; padding-top: .3rem; }
-    .ruta-dot-o { width: 10px; height: 10px; border-radius: 50%; background: var(--verde); flex-shrink: 0; }
-    .ruta-line-v { width: 2px; height: 22px; background: var(--gris-claro); margin: 2px 0; }
-    .ruta-dot-d { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; flex-shrink: 0; }
-    .ruta-texts { flex: 1; }
-    .ruta-text { font-size: .85rem; line-height: 1.4; }
-    .ruta-text:first-child { margin-bottom: .5rem; }
-    .ruta-text span { color: var(--gris); font-size: .72rem; display: block; }
+    .vc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .9rem; }
+    .vc-tipo { display: flex; align-items: center; gap: .5rem; }
+    .vc-ico { width: 36px; height: 36px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .vc-tipo-name { font-weight: 700; font-size: .875rem; }
+    .vc-fecha { font-size: .72rem; color: var(--gris); }
 
-    .viaje-footer { padding: .7rem 1.2rem; border-top: 1px solid var(--gris-claro); display: flex; justify-content: space-between; align-items: center; background: var(--fondo); }
-    .conductor-mini { display: flex; align-items: center; gap: .5rem; font-size: .8rem; color: var(--gris); }
-    .conductor-mini-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--verde-claro); display: flex; align-items: center; justify-content: center; font-size: .65rem; font-weight: 700; color: var(--verde-oscuro); }
-    .btn-calificar { font-size: .78rem; font-weight: 700; color: var(--verde-oscuro); background: var(--verde-bg); border: none; border-radius: 8px; padding: .3rem .8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: none; }
+    .vc-ruta { display: flex; gap: .7rem; margin-bottom: .9rem; }
+    .vc-ruta-dots { display: flex; flex-direction: column; align-items: center; padding-top: .25rem; }
+    .vc-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .vc-dot-a { background: var(--verde); }
+    .vc-dot-b { background: var(--rojo); }
+    .vc-dot-line { width: 1.5px; flex: 1; background: var(--borde); margin: 2px 0; min-height: 14px; }
+    .vc-ruta-text { flex: 1; }
+    .vc-from { font-size: .84rem; font-weight: 500; color: var(--texto); margin-bottom: .25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vc-to { font-size: .84rem; font-weight: 500; color: var(--texto); margin-top: .25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vc-space { height: 10px; }
 
-    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--gris); }
-    .empty-icon { width: 70px; height: 70px; border-radius: 50%; background: var(--verde-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+    .vc-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: .8rem; border-top: 1px solid var(--borde); }
+    .vc-monto { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--verde-oscuro); }
+    .vc-conductor { font-size: .75rem; color: var(--gris); }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; }
+    .empty-ico { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-title { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; margin-bottom: .5rem; }
+    .empty-sub { font-size: .875rem; color: var(--gris); margin-bottom: 1.5rem; }
 </style>
 @endpush
 
 @section('content')
-<div class="top-bar">
-    <a href="{{ route('dashboard') }}" class="btn-back">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+<nav class="top-nav">
+    <a href="{{ route('dashboard') }}" class="back-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
     </a>
-    <div class="top-title">Mis Viajes</div>
-</div>
+    <span class="top-title">Mis Viajes</span>
+    <div style="width:40px;"></div>
+</nav>
 
 <div class="page-body">
 
+    @php
+        $servicios  = \App\Models\Servicio::with(['conductor.usuario'])->where('cliente_id', auth()->id())->orderByDesc('creado_en')->get();
+        $completados = $servicios->where('estatus','completado')->count();
+        $gastado     = $servicios->where('estatus','completado')->sum('total_final');
+        $filtro      = request('filtro','todos');
+        $tipoLabel   = ['viaje'=>'Viaje','mandado_libre'=>'Mandado','delivery_tienda'=>'Delivery'];
+        $tipoIco     = ['viaje'=>'🚗','mandado_libre'=>'🛒','delivery_tienda'=>'🏪'];
+        $tipoBg      = ['viaje'=>'var(--verde-bg)','mandado_libre'=>'#fef3c7','delivery_tienda'=>'#f3e8ff'];
+        $estClass    = ['completado'=>'badge-green','cancelado'=>'badge-red','buscando'=>'badge-yellow','aceptado'=>'badge-blue','en_ruta'=>'badge-blue','en_sitio'=>'badge-blue'];
+
+        $filtered = match($filtro) {
+            'viajes'   => $servicios->where('tipo','viaje'),
+            'mandados' => $servicios->where('tipo','mandado_libre'),
+            'activos'  => $servicios->whereNotIn('estatus',['completado','cancelado']),
+            default    => $servicios,
+        };
+    @endphp
+
     {{-- Stats --}}
     <div class="stats-strip">
-        <div class="strip-card">
-            <div class="strip-value">{{ $stats['total'] }}</div>
-            <div class="strip-label">Total</div>
+        <div class="sc">
+            <div class="sc-val">{{ $servicios->count() }}</div>
+            <div class="sc-lbl">Totales</div>
         </div>
-        <div class="strip-card">
-            <div class="strip-value" style="color:var(--verde-oscuro);">{{ $stats['completados'] }}</div>
-            <div class="strip-label">Completados</div>
+        <div class="sc">
+            <div class="sc-val">{{ $completados }}</div>
+            <div class="sc-lbl">Completados</div>
         </div>
-        <div class="strip-card">
-            <div class="strip-value">${{ number_format($stats['gastado'], 0) }}</div>
-            <div class="strip-label">Gastado</div>
+        <div class="sc">
+            <div class="sc-val">${{ number_format($gastado, 0) }}</div>
+            <div class="sc-lbl">Gastado</div>
         </div>
     </div>
 
     {{-- Filtros --}}
-    <div class="filter-row">
-        <a href="{{ route('mis-viajes') }}" class="filter-chip {{ $filtro === 'todos' ? 'active' : '' }}">Todos</a>
-        <a href="{{ route('mis-viajes', ['filtro' => 'viaje']) }}" class="filter-chip {{ $filtro === 'viaje' ? 'active' : '' }}">🚗 Viajes</a>
-        <a href="{{ route('mis-viajes', ['filtro' => 'mandado_libre']) }}" class="filter-chip {{ $filtro === 'mandado_libre' ? 'active' : '' }}">🛒 Mandados</a>
-        <a href="{{ route('mis-viajes', ['filtro' => 'completado']) }}" class="filter-chip {{ $filtro === 'completado' ? 'active' : '' }}">✅ Completados</a>
-        <a href="{{ route('mis-viajes', ['filtro' => 'cancelado']) }}" class="filter-chip {{ $filtro === 'cancelado' ? 'active' : '' }}">❌ Cancelados</a>
+    <div class="filters">
+        <a href="?filtro=todos"    class="chip {{ $filtro==='todos'   ?'active':'' }}">Todos</a>
+        <a href="?filtro=activos"  class="chip {{ $filtro==='activos' ?'active':'' }}">🔴 Activos</a>
+        <a href="?filtro=viajes"   class="chip {{ $filtro==='viajes'  ?'active':'' }}">🚗 Viajes</a>
+        <a href="?filtro=mandados" class="chip {{ $filtro==='mandados'?'active':'' }}">🛒 Mandados</a>
     </div>
 
     {{-- Lista --}}
-    @if($servicios->count() > 0)
-        @foreach($servicios as $s)
-            @php
-                $iconos  = ['viaje'=>'🚗','mandado_libre'=>'🛒','delivery_tienda'=>'🏪'];
-                $bgIcono = ['viaje'=>'var(--verde-bg)','mandado_libre'=>'#fef3c7','delivery_tienda'=>'#f3e8ff'];
-                $labels  = ['viaje'=>'Viaje','mandado_libre'=>'Mandado','delivery_tienda'=>'Delivery'];
-                $estatusClases = ['completado'=>'badge-green','cancelado'=>'badge-red','buscando'=>'badge-yellow','aceptado'=>'badge-blue','en_ruta'=>'badge-blue','en_sitio'=>'badge-blue'];
-            @endphp
-
-            <div class="viaje-card">
-                <div class="viaje-header">
-                    <div class="viaje-tipo-row">
-                        <div class="viaje-tipo-icon" style="background:{{ $bgIcono[$s->tipo] ?? 'var(--verde-bg)' }};">
-                            {{ $iconos[$s->tipo] ?? '📦' }}
-                        </div>
-                        <div>
-                            <div class="viaje-tipo-label">{{ $labels[$s->tipo] ?? $s->tipo }}</div>
-                            <div class="viaje-fecha">{{ \Carbon\Carbon::parse($s->creado_en)->format('d M Y • H:i') }}</div>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="viaje-monto">${{ number_format($s->total_final, 2) }}</div>
-                        <span class="badge {{ $estatusClases[$s->estatus] ?? 'badge-gray' }}" style="font-size:.72rem;">
-                            {{ ucfirst(str_replace('_',' ',$s->estatus)) }}
-                        </span>
+    @forelse($filtered as $s)
+        <div class="viaje-card">
+            <div class="vc-top">
+                <div class="vc-tipo">
+                    <div class="vc-ico" style="background:{{ $tipoBg[$s->tipo] ?? 'var(--verde-bg)' }};">{{ $tipoIco[$s->tipo] ?? '📦' }}</div>
+                    <div>
+                        <div class="vc-tipo-name">{{ $tipoLabel[$s->tipo] ?? ucfirst($s->tipo) }}</div>
+                        <div class="vc-fecha">{{ \Carbon\Carbon::parse($s->creado_en)->format('d M Y · H:i') }}</div>
                     </div>
                 </div>
-
-                <div class="viaje-ruta">
-                    <div class="ruta-line">
-                        <div class="ruta-dots">
-                            <div class="ruta-dot-o"></div>
-                            <div class="ruta-line-v"></div>
-                            <div class="ruta-dot-d"></div>
-                        </div>
-                        <div class="ruta-texts">
-                            <div class="ruta-text">{{ $s->direccion_origen }}<span>Origen</span></div>
-                            <div class="ruta-text">{{ $s->direccion_destino }}<span>Destino</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="viaje-footer">
-                    <div class="conductor-mini">
-                        @if($s->conductor)
-                            <div class="conductor-mini-avatar">{{ strtoupper(substr($s->conductor->usuario->nombre ?? 'C', 0, 2)) }}</div>
-                            {{ Str::limit($s->conductor->usuario->nombre ?? 'Conductor', 18) }}
-                            @if($s->conductor->calificacion_promedio) · ⭐ {{ $s->conductor->calificacion_promedio }} @endif
-                        @else
-                            Sin conductor
-                        @endif
-                    </div>
-                    <span style="font-size:.75rem; color:var(--gris);">
-                        {{ $s->metodo_pago === 'efectivo' ? '💵' : '👛' }} {{ ucfirst($s->metodo_pago) }}
-                    </span>
-                </div>
-
-                @if($s->distancia_km || $s->estatus === 'completado')
-                    <div style="padding:.6rem 1.2rem; border-top:1px solid var(--gris-claro); display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:.78rem; color:var(--gris);">
-                            @if($s->distancia_km) 📍 {{ $s->distancia_km }} km @endif
-                            @if($s->finalizado_en && $s->iniciado_en)
-                                · ⏱ {{ \Carbon\Carbon::parse($s->iniciado_en)->diffForHumans($s->finalizado_en, true) }}
-                            @endif
-                        </span>
-                        @if($s->estatus === 'completado' && $s->conductor_id)
-                            <a href="{{ route('viaje.finalizado', $s->id) }}" class="btn-calificar">⭐ Calificar</a>
-                        @endif
-                    </div>
-                @endif
+                <span class="badge {{ $estClass[$s->estatus] ?? 'badge-gray' }}">{{ ucfirst(str_replace('_',' ',$s->estatus)) }}</span>
             </div>
-        @endforeach
 
-        <div style="margin-top:1rem;">{{ $servicios->links() }}</div>
-    @else
-        <div class="empty-state">
-            <div class="empty-icon">
-                <svg width="32" height="32" fill="none" stroke="var(--verde-oscuro)" stroke-width="1.5" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>
+            <div class="vc-ruta">
+                <div class="vc-ruta-dots">
+                    <div class="vc-dot vc-dot-a"></div>
+                    <div class="vc-dot-line"></div>
+                    <div class="vc-dot vc-dot-b"></div>
+                </div>
+                <div class="vc-ruta-text">
+                    <div class="vc-from">{{ $s->direccion_origen }}</div>
+                    <div class="vc-space"></div>
+                    <div class="vc-to">{{ $s->direccion_destino }}</div>
+                </div>
             </div>
-            <p style="font-weight:600; margin-bottom:.3rem;">No tienes viajes aún</p>
-            <p style="font-size:.85rem;">¡Pide tu primer viaje o mandado!</p>
-            <a href="{{ route('viaje.nuevo') }}" class="btn btn-primary" style="display:inline-block; margin-top:1rem; border-radius:12px; padding:.8rem 1.5rem;">
-                Pedir Viaje
-            </a>
+
+            <div class="vc-bottom">
+                <div class="vc-conductor">
+                    {{ $s->conductor?->usuario?->nombre ?? 'Sin conductor' }}
+                </div>
+                <div class="vc-monto">${{ number_format($s->total_final, 2) }}</div>
+            </div>
+
+            @if($s->estatus === 'en_ruta' || $s->estatus === 'aceptado' || $s->estatus === 'en_sitio')
+                <a href="{{ $s->tipo === 'mandado_libre'
+                    ? route('mandado.en-proceso', $s->id)
+                    : route('viaje.en-camino', $s->id) }}"
+                    class="btn btn-primary btn-full btn-sm" style="margin-top:.8rem; border-radius:var(--r-sm);">
+                    Ver en tiempo real →
+                </a>
+            @endif
+            @if($s->estatus === 'completado' && $s->conductor && !$s->calificacion_cliente)
+                <a href="{{ route('viaje.finalizado', $s->id) }}"
+                    class="btn btn-outline btn-full btn-sm" style="margin-top:.8rem; border-radius:var(--r-sm);">
+                    ⭐ Calificar viaje
+                </a>
+            @endif
         </div>
-    @endif
+    @empty
+        <div class="empty-state">
+            <div class="empty-ico">🗺️</div>
+            <div class="empty-title">Sin viajes aquí</div>
+            <div class="empty-sub">¿Listo para tu primer viaje?</div>
+            <a href="{{ route('viaje.nuevo') }}" class="btn btn-primary">Pedir un viaje</a>
+        </div>
+    @endforelse
+
 </div>
 @endsection
