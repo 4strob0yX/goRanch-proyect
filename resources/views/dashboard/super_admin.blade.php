@@ -5,7 +5,7 @@
 <style>
     body { background: var(--fondo); }
 
-    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .layout { display: flex; min-height: 100vh; }
 
     /* Sidebar */
     .sidebar { background: var(--verde-oscuro); position: fixed; top: 0; left: 0; height: 100vh; width: 240px; display: flex; flex-direction: column; z-index: 50; }
@@ -20,7 +20,7 @@
     .sb-logout:hover { color: #fca5a5; background: rgba(239,68,68,.08); }
 
     /* Main */
-    .main { margin-left: 240px; }
+    .main { flex: 1; min-width: 0; }
     .main-header { background: var(--blanco); border-bottom: 1px solid var(--borde); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 40; }
     .main-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; }
     .main-sub { font-size: .82rem; color: var(--gris); }
@@ -78,9 +78,8 @@
         .two-col { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
-        .layout { grid-template-columns: 1fr; }
         .sidebar { display: none; }
-        .main { margin-left: 0; }
+        .main { width: 100%; }
         .main-body { padding: 1rem; }
     }
 </style>
@@ -107,6 +106,9 @@
             Usuarios
         </a>
         <a href="{{ route('admin.servicios') }}" class="sb-item">
+        <div class="sb-label">Configuración</div>
+        <a href="{{ route('admin.puntos') }}"      class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Puntos</a>
+        <a href="{{ route('admin.admins') }}"      class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Admins</a>
             <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             Servicios
         </a>
