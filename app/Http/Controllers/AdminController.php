@@ -117,4 +117,98 @@ class AdminController extends Controller
 
         return view('admin.servicios', compact('servicios', 'tipo', 'estatus'));
     }
+
+    // -----------------------------------------------
+    // Puntos de Recolección
+    // -----------------------------------------------
+
+    public function puntos()
+    {
+        $puntos = \App\Models\PuntoRecoleccion::orderBy('nombre')->get();
+        return view('admin.puntos', compact('puntos'));
+    }
+
+    public function storePunto(Request $request)
+    {
+        $request->validate([
+            'nombre'    => 'required|string|max:100',
+            'direccion' => 'required|string',
+            'lat'       => 'required|numeric',
+            'lng'       => 'required|numeric',
+        ]);
+
+        \Illuminate\Support\Facades\DB::statement(
+            "INSERT INTO puntos_recoleccion (nombre, direccion, ubicacion, activo) VALUES (?, ?, ST_GeomFromText(?), 1)",
+            [$request->nombre, $request->direccion, "POINT({$request->lng} {$request->lat})"]
+        );
+
+        return back()->with('success', "Punto '{$request->nombre}' creado correctamente.");
+    }
+
+    public function updatePunto(Request $request, $id)
+    {
+        $request->validate([
+            'nombre'    => 'required|string|max:100',
+            'direccion' => 'required|string',
+        ]);
+
+        $punto = \App\Models\PuntoRecoleccion::findOrFail($id);
+        $punto->update([
+            'nombre'    => $request->nombre,
+            'direccion' => $request->direccion,
+        ]);
+
+        return back()->with('success', "Punto actualizado correctamente.");
+    }
+
+    public function togglePunto($id)
+    {
+        $punto = \App\Models\PuntoRecoleccion::findOrFail($id);
+        $punto->update(['activo' => !$punto->activo]);
+        $estado = $punto->activo ? 'activado' : 'desactivado';
+        return back()->with('success', "Punto '{$punto->nombre}' {$estado}.");
+    }
+
+    // -----------------------------------------------
+    // Administradores
+    // -----------------------------------------------
+
+    public function admins()
+    {
+        $admins = Usuario::where('rol', 'super_admin')->orderByDesc('id')->get();
+        return view('admin.admins', compact('admins'));
+    }
+
+    public function storeAdmin(Request $request)
+    {
+        $request->validate([
+            'nombre'   => 'required|string|max:191',
+            'email'    => 'required|email|unique:usuarios,email',
+            'telefono' => 'required|string|max:20|unique:usuarios,telefono',
+            'password' => 'required|min:8',
+        ]);
+
+        Usuario::create([
+            'nombre'   => $request->nombre,
+            'email'    => $request->email,
+            'telefono' => $request->telefono,
+            'password' => bcrypt($request->password),
+            'rol'      => 'super_admin',
+            'estatus'  => 'activo',
+        ]);
+
+        return back()->with('success', "Administrador '{$request->nombre}' creado correctamente.");
+    }
+
+    public function toggleAdmin(Usuario $usuario)
+    {
+        if ($usuario->id === auth()->id()) {
+            return back()->with('error', 'No puedes desactivar tu propia cuenta.');
+        }
+        $estatus = $usuario->estatus === 'activo' ? 'bloqueado' : 'activo';
+        $usuario->update(['estatus' => $estatus]);
+        $msg = $estatus === 'activo' ? 'activado' : 'desactivado';
+        return back()->with('success', "Admin '{$usuario->nombre}' {$msg}.");
+    }
+
 }

@@ -100,6 +100,17 @@ Route::middleware(['auth', 'rol:super_admin'])->prefix('admin')->group(function 
     Route::get('/usuarios', [AdminController::class, 'usuarios'])->name('admin.usuarios');
     Route::patch('/usuarios/{usuario}/bloquear', [AdminController::class, 'bloquearUsuario'])->name('admin.usuarios.bloquear');
     Route::get('/servicios', [AdminController::class, 'servicios'])->name('admin.servicios');
+
+    // Puntos de recolección
+    Route::get('/puntos',               [AdminController::class, 'puntos'])->name('admin.puntos');
+    Route::post('/puntos',              [AdminController::class, 'storePunto'])->name('admin.puntos.store');
+    Route::patch('/puntos/{id}',        [AdminController::class, 'updatePunto'])->name('admin.puntos.update');
+    Route::patch('/puntos/{id}/toggle', [AdminController::class, 'togglePunto'])->name('admin.puntos.toggle');
+
+    // Administradores
+    Route::get('/admins',                    [AdminController::class, 'admins'])->name('admin.admins');
+    Route::post('/admins',                   [AdminController::class, 'storeAdmin'])->name('admin.admins.store');
+    Route::patch('/admins/{usuario}/toggle', [AdminController::class, 'toggleAdmin'])->name('admin.admins.toggle');
 });
 
 // -----------------------------------------------

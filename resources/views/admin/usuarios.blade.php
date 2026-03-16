@@ -4,9 +4,9 @@
 @push('styles')
 <style>
     body { background: var(--fondo); }
-    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .layout { display: flex; min-height: 100vh; }
 
-    .sidebar { background: var(--verde-oscuro); position: fixed; top: 0; left: 0; height: 100vh; width: 240px; display: flex; flex-direction: column; z-index: 50; overflow-y: auto; }
+    .sidebar { background: var(--verde-oscuro); position: sticky; top: 0; height: 100vh; width: 240px; min-width: 240px; display: flex; flex-direction: column; z-index: 50; overflow-y: auto; }
     .sb-brand { padding: 1.3rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: .6rem; font-family: var(--font-display); font-weight: 700; color: white; font-size: 1.05rem; }
     .sb-brand-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--verde-mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .sb-label { padding: .8rem 1rem .3rem; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.3); }
@@ -14,7 +14,7 @@
     .sb-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
     .sb-item.active { background: rgba(255,255,255,.1); color: white; }
 
-    .main { margin-left: 240px; }
+    .main { flex: 1; min-width: 0; }
     .main-header { background: var(--blanco); border-bottom: 1px solid var(--borde); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 40; }
     .main-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; }
     .main-sub { font-size: .82rem; color: var(--gris); margin-top: .1rem; }
@@ -56,9 +56,8 @@
     .empty-state { text-align: center; padding: 4rem; color: var(--gris); }
 
     @media (max-width: 900px) {
-        .layout { grid-template-columns: 1fr; }
         .sidebar { display: none; }
-        .main { margin-left: 0; }
+        .main { width: 100%; }
         .main-body { padding: 1rem; }
         .stats-strip { grid-template-columns: repeat(3,1fr); }
     }
@@ -77,6 +76,9 @@
         <a href="{{ route('admin.conductores') }}"  class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>Conductores</a>
         <a href="{{ route('admin.usuarios') }}"    class="sb-item active"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Usuarios</a>
         <a href="{{ route('admin.servicios') }}"   class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Servicios</a>
+        <div class="sb-label">Configuración</div>
+        <a href="{{ route('admin.puntos') }}"      class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Puntos</a>
+        <a href="{{ route('admin.admins') }}"      class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Admins</a>
         <div style="margin-top:auto; padding:1rem; border-top:1px solid rgba(255,255,255,.08);">
             <form method="POST" action="{{ route('logout') }}">@csrf
                 <button type="submit" class="sb-item" style="width:100%; background:none; border:none; cursor:pointer; color:rgba(255,255,255,.35);">

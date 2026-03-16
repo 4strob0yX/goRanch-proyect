@@ -17,20 +17,12 @@ class MandadoController extends Controller
 
     public function nuevo()
     {
-        $puntos = DB::table('puntos_recoleccion')
-            ->where('activo', true)
-            ->select('id', 'nombre', 'direccion',
-                DB::raw('ST_Y(ubicacion) as lat'),
-                DB::raw('ST_X(ubicacion) as lng'))
-            ->get();
-
+        $puntos = PuntoRecoleccion::where('activo', true)->get();
         return view('mandados.nuevo', compact('puntos'));
     }
 
     // -----------------------------------------------
     // Crear mandado
-    // Los ítems se guardan en JSON dentro del campo 'notas'
-    // (detalles_servicio es exclusivo para delivery_tienda con producto_id)
     // -----------------------------------------------
 
     public function store(Request $request)
@@ -43,14 +35,16 @@ class MandadoController extends Controller
             'lat_destino'         => 'required|numeric',
             'lng_destino'         => 'required|numeric',
             'metodo_pago'         => 'required|in:efectivo,billetera',
+            'notas'               => 'nullable|string|max:500',
+            // Items del mandado (array)
             'items'               => 'required|array|min:1',
             'items.*.nombre'      => 'required|string|max:100',
             'items.*.cantidad'    => 'required|integer|min:1',
             'items.*.precio_est'  => 'nullable|numeric|min:0',
         ], [
-            'items.required'            => 'Agrega al menos un artículo.',
-            'items.*.nombre.required'   => 'El nombre del artículo es obligatorio.',
-            'items.*.cantidad.required' => 'La cantidad es obligatoria.',
+            'items.required'           => 'Agrega al menos un artículo.',
+            'items.*.nombre.required'  => 'El nombre del artículo es obligatorio.',
+            'items.*.cantidad.required'=> 'La cantidad es obligatoria.',
         ]);
 
         $latOrigen = $request->lat_origen;
@@ -78,23 +72,14 @@ class MandadoController extends Controller
                 ->first();
         }
 
-        // 3. Costos
+        // 3. Calcular costos
         $distanciaKm      = $this->calcularDistanciaKm($latOrigen, $lngOrigen, $request->lat_destino, $request->lng_destino);
         $costoEnvio       = $this->calcularTarifa($distanciaKm);
         $costoProductos   = collect($request->items)->sum(fn($i) => ($i['precio_est'] ?? 0) * $i['cantidad']);
         $tarifaPlataforma = round($costoEnvio * 0.10, 2);
         $totalFinal       = $costoEnvio + $costoProductos + $tarifaPlataforma;
 
-        // 4. Serializar ítems en notas (JSON legible)
-        $notasItems = collect($request->items)->map(fn($i) => [
-            'nombre'     => $i['nombre'],
-            'cantidad'   => $i['cantidad'],
-            'precio_est' => $i['precio_est'] ?? 0,
-        ])->toArray();
-
-        $notasJson = json_encode($notasItems, JSON_UNESCAPED_UNICODE);
-
-        // 5. Crear servicio
+        // 4. Crear servicio + detalles
         DB::beginTransaction();
         try {
             $servicio = Servicio::create([
@@ -112,9 +97,19 @@ class MandadoController extends Controller
                 'tarifa_plataforma' => $tarifaPlataforma,
                 'total_final'       => $totalFinal,
                 'metodo_pago'       => $request->metodo_pago,
-                'notas'             => $notasJson,
+                'notas'             => $request->notas,
                 'iniciado_en'       => $conductor ? now() : null,
             ]);
+
+            // Insertar ítems en detalle_servicios
+            foreach ($request->items as $item) {
+                DB::table('detalle_servicios')->insert([
+                    'servicio_id'  => $servicio->id,
+                    'nombre'       => $item['nombre'],
+                    'cantidad'     => $item['cantidad'],
+                    'precio_est'   => $item['precio_est'] ?? 0,
+                ]);
+            }
 
             DB::commit();
         } catch (\Exception $e) {
@@ -132,14 +127,14 @@ class MandadoController extends Controller
     public function enProceso($id)
     {
         $servicio = Servicio::with([
-            'conductor.usuario',
-            'conductor.puntoRecoleccion',
-        ])
-        ->where('cliente_id', Auth::id())
-        ->findOrFail($id);
+                'conductor.usuario',
+                'conductor.puntoRecoleccion',
+            ])
+            ->where('cliente_id', Auth::id())
+            ->findOrFail($id);
 
-        // Decodificar ítems desde notas JSON
-        $items = json_decode($servicio->notas, true) ?? [];
+        // Cargar ítems del mandado
+        $items = DB::table('detalle_servicios')->where('servicio_id', $id)->get();
 
         return view('mandados.en-proceso', compact('servicio', 'items'));
     }

@@ -6,10 +6,10 @@
     body { background: #111c0e; color: white; }
     body::before { display: none; }
 
-    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    .layout { display: flex; min-height: 100vh; }
 
     /* ── Sidebar ── */
-    .sidebar { background: #0c1509; border-right: 1px solid rgba(255,255,255,.06); position: fixed; top: 0; left: 0; height: 100vh; width: 260px; display: flex; flex-direction: column; z-index: 50; }
+    .sidebar { background: #0c1509; border-right: 1px solid rgba(255,255,255,.06); position: sticky; top: 0; height: 100vh; width: 260px; min-width: 260px; display: flex; flex-direction: column; z-index: 50; overflow-y: auto; }
 
     .sb-header { padding: 1.4rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,.06); display: flex; align-items: center; gap: .7rem; }
     .sb-logo { width: 34px; height: 34px; border-radius: 50%; background: var(--verde-mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -51,7 +51,7 @@
     .sb-logout:hover { color: #fca5a5; }
 
     /* ── Main ── */
-    .main { margin-left: 260px; min-height: 100vh; }
+    .main { flex: 1; min-width: 0; min-height: 100vh; }
 
     .main-header { padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,.06); background: rgba(255,255,255,.02); }
     .main-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: white; }
@@ -96,9 +96,8 @@
     .empty-srv { text-align: center; padding: 2.5rem; color: rgba(255,255,255,.25); font-size: .875rem; }
 
     @media (max-width: 900px) {
-        .layout { grid-template-columns: 1fr; }
         .sidebar { display: none; }
-        .main { margin-left: 0; }
+        .main { width: 100%; }
         .stats-row { grid-template-columns: 1fr 1fr; }
         .main-body { padding: 1.2rem; }
     }
