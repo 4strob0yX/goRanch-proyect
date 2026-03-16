@@ -8,11 +8,6 @@ use Illuminate\Support\Facades\Auth;
 
 class VerificarRol
 {
-    /**
-     * Uso en rutas:
-     *   ->middleware('rol:usuario')
-     *   ->middleware('rol:conductor,super_admin')
-     */
     public function handle(Request $request, Closure $next, string ...$roles): mixed
     {
         if (!Auth::check()) {
@@ -29,9 +24,20 @@ class VerificarRol
         }
 
         if (!in_array($usuario->rol, $roles)) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
+            // Redirigir al dashboard correcto según el rol
+            return redirect()->to($this->dashboardPorRol($usuario->rol));
         }
 
         return $next($request);
+    }
+
+    private function dashboardPorRol(string $rol): string
+    {
+        return match($rol) {
+            'super_admin'  => route('admin.dashboard'),
+            'conductor'    => route('conductor.dashboard'),
+            'admin_tienda' => route('tienda.dashboard'),
+            default        => route('dashboard'),
+        };
     }
 }

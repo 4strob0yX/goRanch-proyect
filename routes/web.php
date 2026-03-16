@@ -39,7 +39,7 @@ Route::get('/conductor/pendiente', [RegistroConductorController::class, 'pendien
 // Logout
 // -----------------------------------------------
 
-Route::post('/logout', [AuthController::class, 'logout'])
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
