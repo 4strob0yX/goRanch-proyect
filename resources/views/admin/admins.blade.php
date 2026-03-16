@@ -50,6 +50,23 @@
         .main { width: 100%; }
         .main-body { padding: 1rem; }
     }
+
+    /* ── Hamburger móvil ── */
+    .mobile-header { display: none; background: var(--verde-oscuro); padding: .9rem 1.2rem; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .mobile-brand { font-family: var(--font-display); font-weight: 700; color: white; font-size: 1rem; }
+    .hamburger { background: none; border: none; cursor: pointer; padding: .3rem; display: flex; flex-direction: column; gap: 5px; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: white; border-radius: 2px; transition: all .2s; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 90; }
+    .sidebar-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+        .mobile-header { display: flex; }
+        .sidebar { display: none; position: fixed; top: 0; left: 0; height: 100vh; z-index: 95; transform: translateX(-100%); transition: transform .25s; }
+        .sidebar.open { display: flex; transform: translateX(0); }
+        .main { width: 100%; }
+        .main-header { top: 0; }
+    }
+
 </style>
 @endpush
 
@@ -211,6 +228,26 @@
 </div>
 
 @push('scripts')
+
+<script>
+function abrirMenu() {
+    document.querySelector('.sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function cerrarMenu() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+// Cerrar al hacer clic en cualquier link del sidebar en móvil
+document.querySelectorAll('.sb-item').forEach(el => {
+    el.addEventListener('click', () => {
+        if (window.innerWidth <= 768) cerrarMenu();
+    });
+});
+</script>
+
 <script>
 document.getElementById('modal').addEventListener('click', function(e) {
     if(e.target === this) this.classList.remove('open');
