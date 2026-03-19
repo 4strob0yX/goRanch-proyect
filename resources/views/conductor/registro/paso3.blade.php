@@ -69,7 +69,7 @@
         <form method="POST" action="{{ route('conductor.registro.paso3.store') }}" enctype="multipart/form-data">
             @csrf
 
-            <div class="doc-item" id="di-ine" onclick="document.getElementById('f-ine').click()">
+            <div class="doc-item" id="di-ine">
                 <div class="doc-ico">🪪</div>
                 <div>
                     <div class="doc-name">INE / Identificación oficial</div>
@@ -79,7 +79,7 @@
                 <input type="file" name="ine" id="f-ine" class="doc-input" accept="image/*,.pdf" onchange="markDoc('ine')">
             </div>
 
-            <div class="doc-item" id="di-licencia" onclick="document.getElementById('f-licencia').click()">
+            <div class="doc-item" id="di-licencia">
                 <div class="doc-ico">📋</div>
                 <div>
                     <div class="doc-name">Licencia de conducir</div>
@@ -89,7 +89,7 @@
                 <input type="file" name="licencia" id="f-licencia" class="doc-input" accept="image/*,.pdf" onchange="markDoc('licencia')">
             </div>
 
-            <div class="doc-item" id="di-circulacion" onclick="document.getElementById('f-circulacion').click()">
+            <div class="doc-item" id="di-circulacion">
                 <div class="doc-ico">🚘</div>
                 <div>
                     <div class="doc-name">Tarjeta de circulación</div>

@@ -20,6 +20,14 @@
     .step-card { background: var(--blanco); border-radius: var(--r-xl); border: 1px solid var(--borde); padding: 2rem; box-shadow: var(--sombra-sm); }
     .step-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: .3rem; }
     .step-sub { color: var(--gris); font-size: .875rem; margin-bottom: 1.5rem; }
+
+    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-bottom: 1.1rem; }
+    .radio-card { border: 2px solid var(--borde); border-radius: var(--r-md); padding: .9rem .5rem; text-align: center; cursor: pointer; transition: all .15s; }
+    .radio-card:hover { border-color: var(--verde-claro); background: var(--verde-bg); }
+    .radio-card.selected { border-color: var(--verde); background: var(--verde-bg); }
+    .radio-card input { display: none; }
+    .radio-ico { font-size: 1.6rem; margin-bottom: .3rem; }
+    .radio-lbl { font-weight: 600; font-size: .82rem; }
 </style>
 @endpush
 
@@ -50,6 +58,28 @@
 
         <form method="POST" action="{{ route('conductor.registro.paso2.store') }}">
             @csrf
+
+            <div class="form-group">
+                <label class="form-label">Tipo de vehículo</label>
+                <div class="radio-group">
+                    <label class="radio-card" id="rv-moto" onclick="selectVehiculo('moto')">
+                        <input type="radio" name="tipo_vehiculo" value="moto" {{ old('tipo_vehiculo', session('registro_conductor.paso2.tipo_vehiculo')) === 'moto' ? 'checked' : '' }}>
+                        <div class="radio-ico">🏍️</div>
+                        <div class="radio-lbl">Moto</div>
+                    </label>
+                    <label class="radio-card" id="rv-bici" onclick="selectVehiculo('bici')">
+                        <input type="radio" name="tipo_vehiculo" value="bici" {{ old('tipo_vehiculo', session('registro_conductor.paso2.tipo_vehiculo')) === 'bici' ? 'checked' : '' }}>
+                        <div class="radio-ico">🚲</div>
+                        <div class="radio-lbl">Bicicleta</div>
+                    </label>
+                    <label class="radio-card" id="rv-auto" onclick="selectVehiculo('auto')">
+                        <input type="radio" name="tipo_vehiculo" value="auto" {{ old('tipo_vehiculo', session('registro_conductor.paso2.tipo_vehiculo')) === 'auto' ? 'checked' : '' }}>
+                        <div class="radio-ico">🚗</div>
+                        <div class="radio-lbl">Auto</div>
+                    </label>
+                </div>
+                @error('tipo_vehiculo') <p class="form-error">{{ $message }}</p> @enderror
+            </div>
 
             <div class="grid-2">
                 <div class="form-group">
@@ -86,4 +116,16 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function selectVehiculo(tipo) {
+    ['moto','bici','auto'].forEach(t => {
+        document.getElementById('rv-'+t).classList.toggle('selected', t === tipo);
+    });
+}
+const prev = '{{ old("tipo_vehiculo", session("registro_conductor.paso2.tipo_vehiculo")) }}';
+if(prev) selectVehiculo(prev);
+</script>
+@endpush
 @endsection

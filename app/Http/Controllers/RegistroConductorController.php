@@ -106,13 +106,16 @@ class RegistroConductorController extends Controller
     public function storePaso3(Request $request)
     {
         $request->validate([
-            'licencia' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'seguro'   => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'ine'                  => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'licencia'             => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'tarjeta_circulacion'  => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ], [
-            'licencia.required' => 'La licencia es obligatoria.',
-            'licencia.mimes'    => 'La licencia debe ser imagen o PDF.',
-            'seguro.required'   => 'El seguro es obligatorio.',
-            'seguro.mimes'      => 'El seguro debe ser imagen o PDF.',
+            'ine.required'                  => 'La identificación oficial (INE) es obligatoria.',
+            'ine.mimes'                     => 'La INE debe ser imagen o PDF.',
+            'licencia.required'             => 'La licencia de conducir es obligatoria.',
+            'licencia.mimes'                => 'La licencia debe ser imagen o PDF.',
+            'tarjeta_circulacion.required'  => 'La tarjeta de circulación es obligatoria.',
+            'tarjeta_circulacion.mimes'     => 'La tarjeta de circulación debe ser imagen o PDF.',
         ]);
 
         $paso1 = session('registro_conductor.paso1');
@@ -139,8 +142,16 @@ class RegistroConductorController extends Controller
         ]);
 
         // Guardar documentos
-        $licenciaPath = $request->file('licencia')->store('documentos/conductores', 'public');
-        $seguroPath   = $request->file('seguro')->store('documentos/conductores', 'public');
+        $inePath         = $request->file('ine')->store('documentos/conductores', 'public');
+        $licenciaPath    = $request->file('licencia')->store('documentos/conductores', 'public');
+        $circulacionPath = $request->file('tarjeta_circulacion')->store('documentos/conductores', 'public');
+
+        DocumentoConductor::create([
+            'conductor_id'   => $conductor->id,
+            'tipo_documento' => 'ine',
+            'url_archivo'    => $inePath,
+            'estatus'        => 'pendiente',
+        ]);
 
         DocumentoConductor::create([
             'conductor_id'   => $conductor->id,
@@ -151,8 +162,8 @@ class RegistroConductorController extends Controller
 
         DocumentoConductor::create([
             'conductor_id'   => $conductor->id,
-            'tipo_documento' => 'seguro',
-            'url_archivo'    => $seguroPath,
+            'tipo_documento' => 'tarjeta_circulacion',
+            'url_archivo'    => $circulacionPath,
             'estatus'        => 'pendiente',
         ]);
 
