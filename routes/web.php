@@ -35,6 +35,11 @@ Route::get('/conductor/pendiente', [RegistroConductorController::class, 'pendien
     ->middleware('auth')
     ->name('conductor.registro.pendiente');
 
+// Conductor suspendido (requiere auth)
+Route::get('/conductor/suspendido', [ConductorController::class, 'suspendido'])
+    ->middleware('auth')
+    ->name('conductor.suspendido');
+
 // -----------------------------------------------
 // Logout
 // -----------------------------------------------
@@ -71,7 +76,7 @@ Route::middleware(['auth', 'rol:usuario'])->group(function () {
 
 use App\Http\Controllers\ConductorController;
 
-Route::middleware(['auth', 'rol:conductor'])->prefix('conductor')->group(function () {
+Route::middleware(['auth', 'rol:conductor', 'conductor.activo'])->prefix('conductor')->group(function () {
     Route::get('/inicio', [ConductorController::class, 'dashboard'])->name('conductor.dashboard');
     Route::post('/conectar', [ConductorController::class, 'conectar'])->name('conductor.conectar');
     Route::post('/desconectar', [ConductorController::class, 'desconectar'])->name('conductor.desconectar');

@@ -16,9 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
+        // Confiar en todos los proxies (Railway usa reverse proxy)
+        $middleware->trustProxies(at: '*');
+
         // Registrar alias del middleware de roles
         $middleware->alias([
-            'rol' => \App\Http\Middleware\VerificarRol::class,
+            'rol'                => \App\Http\Middleware\VerificarRol::class,
+            'conductor.activo'   => \App\Http\Middleware\VerificarEstatusConductor::class,
         ]);
 
     })

@@ -52,14 +52,21 @@ class AdminController extends Controller
 
     public function conductores(Request $request)
     {
-        $estatus = $request->get('estatus', 'pendiente');
+        $filtro = $request->get('estatus', 'todos');
 
         $conductores = Conductor::with(['usuario', 'documentos'])
-            ->when($estatus !== 'todos', fn($q) => $q->where('estatus', $estatus))
-            ->orderByDesc('creado_en')
-            ->paginate(15);
+            ->when($filtro !== 'todos', fn($q) => $q->where('estatus', $filtro))
+            ->orderByDesc('id')
+            ->get();
 
-        return view('admin.conductores', compact('conductores', 'estatus'));
+        $stats = [
+            'totales'    => Conductor::count(),
+            'activos'    => Conductor::where('estatus', 'activo')->count(),
+            'pendientes' => Conductor::where('estatus', 'pendiente')->count(),
+            'conectados' => Conductor::where('esta_conectado', true)->count(),
+        ];
+
+        return view('admin.conductores', compact('conductores', 'filtro', 'stats'));
     }
 
     public function aprobarConductor(Conductor $conductor)

@@ -59,6 +59,25 @@
 
     .c-card-foot { padding: .85rem 1.1rem; display: flex; gap: .5rem; border-top: 1px solid var(--borde); }
 
+    .doc-link { display: flex; align-items: center; gap: .5rem; font-size: .78rem; padding: .4rem .7rem; border-radius: var(--r-sm); margin-bottom: .4rem; text-decoration: none; border: 1px solid var(--borde); background: var(--blanco); color: var(--texto); transition: all .15s; cursor: pointer; }
+    .doc-link:hover { border-color: var(--verde-claro); background: var(--verde-bg); }
+    .doc-link-ico { font-size: .9rem; flex-shrink: 0; }
+    .doc-link-name { font-weight: 600; flex: 1; }
+    .doc-link-status { font-size: .68rem; font-weight: 700; padding: .1rem .45rem; border-radius: var(--r-full); }
+
+    /* Modal preview */
+    .doc-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+    .doc-modal-overlay.open { display: flex; }
+    .doc-modal { background: white; border-radius: var(--r-lg); max-width: 700px; width: 100%; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+    .doc-modal-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--borde); display: flex; justify-content: space-between; align-items: center; }
+    .doc-modal-title { font-weight: 700; font-size: .95rem; }
+    .doc-modal-close { background: none; border: none; cursor: pointer; font-size: 1.3rem; color: var(--gris); padding: .2rem; }
+    .doc-modal-close:hover { color: var(--texto); }
+    .doc-modal-body { padding: 1rem; overflow: auto; flex: 1; text-align: center; }
+    .doc-modal-body img { max-width: 100%; max-height: 70vh; border-radius: var(--r-sm); }
+    .doc-modal-body iframe { width: 100%; height: 70vh; border: none; border-radius: var(--r-sm); }
+    .doc-modal-foot { padding: .8rem 1.2rem; border-top: 1px solid var(--borde); text-align: right; }
+
     .empty-state { text-align: center; padding: 4rem 2rem; color: var(--gris); }
     .empty-ico { font-size: 3rem; margin-bottom: 1rem; opacity: .4; }
     .empty-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--texto-2); margin-bottom: .4rem; }
@@ -100,8 +119,7 @@
         <div class="sb-label">Gestión</div>
         <a href="{{ route('admin.dashboard') }}"   class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
         <a href="{{ route('admin.conductores') }}"  class="sb-item active"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/></svg>Conductores
-            @php $pend = \App\Models\Conductor::where('estatus','pendiente')->count(); @endphp
-            @if($pend) <span style="margin-left:auto;background:#ef4444;color:white;border-radius:999px;padding:.1rem .5rem;font-size:.7rem;font-weight:700;">{{ $pend }}</span> @endif
+            @if($stats['pendientes']) <span style="margin-left:auto;background:#ef4444;color:white;border-radius:999px;padding:.1rem .5rem;font-size:.7rem;font-weight:700;">{{ $stats['pendientes'] }}</span> @endif
         </a>
         <a href="{{ route('admin.usuarios') }}"    class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Usuarios</a>
         <a href="{{ route('admin.servicios') }}"   class="sb-item"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Servicios</a>
@@ -118,6 +136,8 @@
         </div>
     </aside>
 
+    <div class="sidebar-overlay" id="overlay" onclick="cerrarMenu()"></div>
+
     <div class="main">
         <div class="main-header">
             <div>
@@ -128,43 +148,31 @@
 
         <div class="main-body">
 
-            @php
-                $filtro = request('estatus', 'todos');
-                $query  = \App\Models\Conductor::with(['usuario','documentos']);
-                if($filtro !== 'todos') $query->where('estatus', $filtro);
-                $conductores = $query->orderByDesc('id')->get();
-
-                $totales    = \App\Models\Conductor::count();
-                $activos    = \App\Models\Conductor::where('estatus','activo')->count();
-                $pendientes = \App\Models\Conductor::where('estatus','pendiente')->count();
-                $conectados = \App\Models\Conductor::where('esta_conectado', true)->count();
-            @endphp
-
             {{-- Stats --}}
             <div class="stats-strip">
                 <div class="stat-mini">
-                    <div class="stat-mini-val">{{ $totales }}</div>
+                    <div class="stat-mini-val">{{ $stats['totales'] }}</div>
                     <div class="stat-mini-lbl">Total conductores</div>
                 </div>
                 <div class="stat-mini">
-                    <div class="stat-mini-val" style="color:var(--verde-oscuro);">{{ $activos }}</div>
+                    <div class="stat-mini-val" style="color:var(--verde-oscuro);">{{ $stats['activos'] }}</div>
                     <div class="stat-mini-lbl">Activos</div>
                 </div>
                 <div class="stat-mini">
-                    <div class="stat-mini-val" style="color:var(--amarillo);">{{ $pendientes }}</div>
+                    <div class="stat-mini-val" style="color:var(--amarillo);">{{ $stats['pendientes'] }}</div>
                     <div class="stat-mini-lbl">Pendientes</div>
                 </div>
                 <div class="stat-mini">
-                    <div class="stat-mini-val" style="color:var(--azul);">{{ $conectados }}</div>
+                    <div class="stat-mini-val" style="color:var(--azul);">{{ $stats['conectados'] }}</div>
                     <div class="stat-mini-lbl">Conectados ahora</div>
                 </div>
             </div>
 
             {{-- Filtros --}}
             <div class="filters">
-                <a href="?estatus=todos"      class="chip {{ $filtro==='todos'      ?'active':'' }}">Todos ({{ $totales }})</a>
-                <a href="?estatus=pendiente"  class="chip chip-yellow {{ $filtro==='pendiente' ?'active':'' }}">⏳ Pendientes ({{ $pendientes }})</a>
-                <a href="?estatus=activo"     class="chip {{ $filtro==='activo'     ?'active':'' }}">✓ Activos ({{ $activos }})</a>
+                <a href="?estatus=todos"      class="chip {{ $filtro==='todos'      ?'active':'' }}">Todos ({{ $stats['totales'] }})</a>
+                <a href="?estatus=pendiente"  class="chip chip-yellow {{ $filtro==='pendiente' ?'active':'' }}">⏳ Pendientes ({{ $stats['pendientes'] }})</a>
+                <a href="?estatus=activo"     class="chip {{ $filtro==='activo'     ?'active':'' }}">✓ Activos ({{ $stats['activos'] }})</a>
                 <a href="?estatus=suspendido" class="chip chip-red {{ $filtro==='suspendido' ?'active':'' }}">Suspendidos</a>
             </div>
 
@@ -231,31 +239,38 @@
                                     @foreach($c->documentos as $doc)
                                         @php
                                             $dc = ['aprobado'=>'badge-green','pendiente'=>'badge-yellow','rechazado'=>'badge-red'];
+                                            $docIcos = ['ine'=>'🪪','licencia'=>'📋','tarjeta_circulacion'=>'🚘','seguro'=>'🛡️'];
+                                            $docUrl = asset('storage/' . $doc->url_archivo);
+                                            $ext = strtolower(pathinfo($doc->url_archivo, PATHINFO_EXTENSION));
+                                            $isPdf = $ext === 'pdf';
                                         @endphp
-                                        <span class="doc-badge {{ $dc[$doc->estatus] ?? 'badge-gray' }}">
-                                            {{ ucfirst(str_replace('_',' ',$doc->tipo_documento)) }}
-                                        </span>
+                                        <div class="doc-link" onclick="abrirDocModal('{{ addslashes(ucfirst(str_replace('_',' ',$doc->tipo_documento))) }}', '{{ $docUrl }}', {{ $isPdf ? 'true' : 'false' }})">
+                                            <span class="doc-link-ico">{{ $docIcos[$doc->tipo_documento] ?? '📄' }}</span>
+                                            <span class="doc-link-name">{{ ucfirst(str_replace('_',' ',$doc->tipo_documento)) }}</span>
+                                            <span class="doc-link-status {{ $dc[$doc->estatus] ?? 'badge-gray' }}">{{ ucfirst($doc->estatus) }}</span>
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </div>
                                     @endforeach
                                 </div>
                             @endif
 
                             <div class="c-card-foot">
                                 @if($c->estatus === 'pendiente')
-                                    <form method="POST" action="{{ route('admin.conductores.aprobar', $c->id) }}" style="flex:1;">
+                                    <form method="POST" action="{{ route('admin.conductores.aprobar', $c->id) }}" style="flex:1;" onsubmit="return confirm('¿Aprobar a {{ addslashes($c->usuario->nombre) }}?')">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-full btn-sm" style="background:var(--verde-bg); color:var(--verde-oscuro); border-radius:var(--r-sm);">✓ Aprobar</button>
                                     </form>
-                                    <form method="POST" action="{{ route('admin.conductores.rechazar', $c->id) }}" style="flex:1;">
+                                    <form method="POST" action="{{ route('admin.conductores.rechazar', $c->id) }}" style="flex:1;" onsubmit="return confirm('¿Rechazar a {{ addslashes($c->usuario->nombre) }}? Se suspenderá su cuenta.')">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-danger btn-full btn-sm" style="border-radius:var(--r-sm);">✕ Rechazar</button>
                                     </form>
                                 @elseif($c->estatus === 'activo')
-                                    <form method="POST" action="{{ route('admin.conductores.rechazar', $c->id) }}" style="flex:1;">
+                                    <form method="POST" action="{{ route('admin.conductores.rechazar', $c->id) }}" style="flex:1;" onsubmit="return confirm('¿Suspender a {{ addslashes($c->usuario->nombre) }}? No podrá recibir servicios.')">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-danger btn-full btn-sm" style="border-radius:var(--r-sm);">Suspender</button>
                                     </form>
                                 @elseif($c->estatus === 'suspendido')
-                                    <form method="POST" action="{{ route('admin.conductores.aprobar', $c->id) }}" style="flex:1;">
+                                    <form method="POST" action="{{ route('admin.conductores.aprobar', $c->id) }}" style="flex:1;" onsubmit="return confirm('¿Reactivar a {{ addslashes($c->usuario->nombre) }}?')">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-full btn-sm" style="background:var(--verde-bg); color:var(--verde-oscuro); border-radius:var(--r-sm);">Reactivar</button>
                                     </form>
@@ -266,6 +281,23 @@
                 </div>
             @endif
 
+        </div>
+    </div>
+</div>
+
+{{-- Modal de preview de documentos --}}
+<div class="doc-modal-overlay" id="docModalOverlay" onclick="cerrarDocModal()">
+    <div class="doc-modal" onclick="event.stopPropagation()">
+        <div class="doc-modal-header">
+            <span class="doc-modal-title" id="docModalTitle">Documento</span>
+            <button class="doc-modal-close" onclick="cerrarDocModal()">&times;</button>
+        </div>
+        <div class="doc-modal-body" id="docModalBody"></div>
+        <div class="doc-modal-foot">
+            <a id="docModalDownload" href="#" target="_blank" class="btn btn-sm" style="background:var(--verde-bg); color:var(--verde-oscuro); border-radius:var(--r-sm); text-decoration:none; display:inline-flex; align-items:center; gap:.4rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Abrir en nueva pestaña
+            </a>
         </div>
     </div>
 </div>
@@ -288,6 +320,33 @@ document.querySelectorAll('.sb-item').forEach(el => {
     el.addEventListener('click', () => {
         if (window.innerWidth <= 768) cerrarMenu();
     });
+});
+
+// Document preview modal
+function abrirDocModal(title, url, isPdf) {
+    document.getElementById('docModalTitle').textContent = title;
+    document.getElementById('docModalDownload').href = url;
+
+    const body = document.getElementById('docModalBody');
+    if (isPdf) {
+        body.innerHTML = '<iframe src="' + url + '"></iframe>';
+    } else {
+        body.innerHTML = '<img src="' + url + '" alt="' + title + '">';
+    }
+
+    document.getElementById('docModalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function cerrarDocModal() {
+    document.getElementById('docModalOverlay').classList.remove('open');
+    document.getElementById('docModalBody').innerHTML = '';
+    document.body.style.overflow = '';
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') cerrarDocModal();
 });
 </script>
 

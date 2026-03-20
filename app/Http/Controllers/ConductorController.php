@@ -16,7 +16,8 @@ class ConductorController extends Controller
     public function dashboard()
     {
         $conductor = Auth::user()->conductor;
-        $puntos    = PuntoRecoleccion::where('activo', true)->get();
+
+        $puntos = PuntoRecoleccion::where('activo', true)->get();
 
         $serviciosRecientes = Servicio::where('conductor_id', $conductor->id)
             ->with('cliente')
@@ -67,6 +68,15 @@ class ConductorController extends Controller
         ]);
 
         return back()->with('success', 'Te desconectaste correctamente.');
+    }
+
+    // -----------------------------------------------
+    // Vista de conductor suspendido
+    // -----------------------------------------------
+
+    public function suspendido()
+    {
+        return view('conductor.suspendido');
     }
 
     // -----------------------------------------------

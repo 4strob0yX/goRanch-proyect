@@ -7,6 +7,7 @@ use App\Models\DocumentoConductor;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -121,51 +122,66 @@ class RegistroConductorController extends Controller
         $paso1 = session('registro_conductor.paso1');
         $paso2 = session('registro_conductor.paso2');
 
-        // Crear usuario con rol conductor
-        $usuario = Usuario::create([
-            'nombre'   => $paso1['nombre'],
-            'email'    => $paso1['email'],
-            'telefono' => $paso1['telefono'],
-            'password' => Hash::make($paso1['password']),
-            'rol'      => 'conductor',
-            'estatus'  => 'activo',
-        ]);
+        // Re-validar unicidad antes de crear (previene race conditions)
+        if (Usuario::where('email', $paso1['email'])->exists()) {
+            return redirect()->route('conductor.registro.paso1')
+                ->withErrors(['email' => 'Este correo ya fue registrado. Intenta de nuevo.']);
+        }
+        if (Usuario::where('telefono', $paso1['telefono'])->exists()) {
+            return redirect()->route('conductor.registro.paso1')
+                ->withErrors(['telefono' => 'Este teléfono ya fue registrado. Intenta de nuevo.']);
+        }
+        if (Conductor::where('placa', $paso2['placa'])->exists()) {
+            return redirect()->route('conductor.registro.paso2')
+                ->withErrors(['placa' => 'Esta placa ya fue registrada. Intenta de nuevo.']);
+        }
 
-        // Crear perfil conductor
-        $conductor = Conductor::create([
-            'usuario_id'    => $usuario->id,
-            'tipo_vehiculo' => $paso2['tipo_vehiculo'],
-            'marca'         => $paso2['marca'],
-            'modelo'        => $paso2['modelo'],
-            'placa'         => $paso2['placa'],
-            'estatus'       => 'pendiente', // espera aprobación del admin
-        ]);
-
-        // Guardar documentos
+        // Subir archivos antes de la transacción (no se puede hacer rollback de archivos)
         $inePath         = $request->file('ine')->store('documentos/conductores', 'public');
         $licenciaPath    = $request->file('licencia')->store('documentos/conductores', 'public');
         $circulacionPath = $request->file('tarjeta_circulacion')->store('documentos/conductores', 'public');
 
-        DocumentoConductor::create([
-            'conductor_id'   => $conductor->id,
-            'tipo_documento' => 'ine',
-            'url_archivo'    => $inePath,
-            'estatus'        => 'pendiente',
-        ]);
+        try {
+            $usuario = DB::transaction(function () use ($paso1, $paso2, $inePath, $licenciaPath, $circulacionPath) {
+                $usuario = Usuario::create([
+                    'nombre'   => $paso1['nombre'],
+                    'email'    => $paso1['email'],
+                    'telefono' => $paso1['telefono'],
+                    'password' => Hash::make($paso1['password']),
+                    'rol'      => 'conductor',
+                    'estatus'  => 'activo',
+                ]);
 
-        DocumentoConductor::create([
-            'conductor_id'   => $conductor->id,
-            'tipo_documento' => 'licencia',
-            'url_archivo'    => $licenciaPath,
-            'estatus'        => 'pendiente',
-        ]);
+                $conductor = Conductor::create([
+                    'usuario_id'    => $usuario->id,
+                    'tipo_vehiculo' => $paso2['tipo_vehiculo'],
+                    'marca'         => $paso2['marca'],
+                    'modelo'        => $paso2['modelo'],
+                    'placa'         => $paso2['placa'],
+                    'estatus'       => 'pendiente',
+                ]);
 
-        DocumentoConductor::create([
-            'conductor_id'   => $conductor->id,
-            'tipo_documento' => 'tarjeta_circulacion',
-            'url_archivo'    => $circulacionPath,
-            'estatus'        => 'pendiente',
-        ]);
+                foreach ([
+                    'ine'                  => $inePath,
+                    'licencia'             => $licenciaPath,
+                    'tarjeta_circulacion'  => $circulacionPath,
+                ] as $tipo => $path) {
+                    DocumentoConductor::create([
+                        'conductor_id'   => $conductor->id,
+                        'tipo_documento' => $tipo,
+                        'url_archivo'    => $path,
+                        'estatus'        => 'pendiente',
+                    ]);
+                }
+
+                return $usuario;
+            });
+        } catch (\Exception $e) {
+            // Limpiar archivos subidos si la transacción falló
+            Storage::disk('public')->delete([$inePath, $licenciaPath, $circulacionPath]);
+
+            return back()->withErrors(['error' => 'Ocurrió un error al procesar tu solicitud. Intenta de nuevo.']);
+        }
 
         // Limpiar sesión
         $request->session()->forget('registro_conductor');
