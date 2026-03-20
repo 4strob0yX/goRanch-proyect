@@ -120,6 +120,4 @@ Route::middleware(['auth', 'rol:super_admin'])->prefix('admin')->group(function 
 // Redirect raíz
 // -----------------------------------------------
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::redirect('/', '/login');
