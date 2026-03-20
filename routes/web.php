@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ConductorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ViajeController;
 use App\Http\Controllers\MandadoController;
@@ -74,8 +76,6 @@ Route::middleware(['auth', 'rol:usuario'])->group(function () {
 // Dashboard Conductor
 // -----------------------------------------------
 
-use App\Http\Controllers\ConductorController;
-
 Route::middleware(['auth', 'rol:conductor', 'conductor.activo'])->prefix('conductor')->group(function () {
     Route::get('/inicio', [ConductorController::class, 'dashboard'])->name('conductor.dashboard');
     Route::post('/conectar', [ConductorController::class, 'conectar'])->name('conductor.conectar');
@@ -94,8 +94,6 @@ Route::middleware(['auth', 'rol:admin_tienda'])->prefix('tienda')->group(functio
 // -----------------------------------------------
 // Dashboard Super Admin
 // -----------------------------------------------
-
-use App\Http\Controllers\AdminController;
 
 Route::middleware(['auth', 'rol:super_admin'])->prefix('admin')->group(function () {
     Route::get('/inicio', [AdminController::class, 'dashboard'])->name('admin.dashboard');
