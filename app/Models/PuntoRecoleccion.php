@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class PuntoRecoleccion extends Model
 {
@@ -20,6 +21,24 @@ class PuntoRecoleccion extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+
+    // -----------------------------------------------
+    // Accessors para extraer lat/lng del campo geometry
+    // -----------------------------------------------
+
+    public function getLatAttribute(): ?float
+    {
+        if (!$this->ubicacion) return null;
+        $point = DB::selectOne("SELECT ST_Y(?) AS lat", [$this->ubicacion]);
+        return $point?->lat;
+    }
+
+    public function getLngAttribute(): ?float
+    {
+        if (!$this->ubicacion) return null;
+        $point = DB::selectOne("SELECT ST_X(?) AS lng", [$this->ubicacion]);
+        return $point?->lng;
+    }
 
     // -----------------------------------------------
     // Relaciones
