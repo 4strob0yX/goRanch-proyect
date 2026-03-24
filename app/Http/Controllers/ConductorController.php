@@ -20,6 +20,13 @@ class ConductorController extends Controller
 
         $puntos = PuntoRecoleccion::where('activo', true)->get();
 
+        // Servicio activo (no completado ni cancelado)
+        $servicioActivo = Servicio::where('conductor_id', $conductor->id)
+            ->whereNotIn('estatus', ['completado', 'cancelado'])
+            ->with('cliente')
+            ->orderByDesc('creado_en')
+            ->first();
+
         $serviciosRecientes = Servicio::where('conductor_id', $conductor->id)
             ->with('cliente')
             ->orderByDesc('creado_en')
@@ -38,7 +45,7 @@ class ConductorController extends Controller
             'calificacion' => $conductor->calificacion_promedio,
         ];
 
-        return view('dashboard.conductor', compact('conductor', 'puntos', 'serviciosRecientes', 'stats'));
+        return view('dashboard.conductor', compact('conductor', 'puntos', 'servicioActivo', 'serviciosRecientes', 'stats'));
     }
 
     // -----------------------------------------------
@@ -116,13 +123,21 @@ class ConductorController extends Controller
             return response()->json(['servicios' => []]);
         }
 
-        $servicios = Servicio::where('estatus', 'buscando')
+        // Solo mostrar servicios asignados al punto del conductor (o sin punto asignado como fallback)
+        $query = Servicio::where('estatus', 'buscando')
             ->whereNull('conductor_id')
             ->with('cliente')
             ->orderBy('creado_en', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($s) {
+            ->limit(10);
+
+        if ($conductor->punto_recoleccion_id) {
+            $query->where(function ($q) use ($conductor) {
+                $q->where('punto_recoleccion_id', $conductor->punto_recoleccion_id)
+                  ->orWhereNull('punto_recoleccion_id');
+            });
+        }
+
+        $servicios = $query->get()->map(function ($s) {
                 return [
                     'id'               => $s->id,
                     'tipo'             => $s->tipo,

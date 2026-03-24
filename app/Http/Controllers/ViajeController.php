@@ -43,7 +43,14 @@ class ViajeController extends Controller
         $latOrigen = $request->lat_origen;
         $lngOrigen = $request->lng_origen;
 
-        // 1. Calcular tarifa
+        // 1. Punto de recolección más cercano al origen
+        $puntoMasCercano = PuntoRecoleccion::masCercanoA($latOrigen, $lngOrigen);
+
+        if (!$puntoMasCercano) {
+            return back()->withInput()->withErrors(['sin_cobertura' => 'No hay puntos de recolección activos en tu zona. Intenta más tarde.']);
+        }
+
+        // 2. Calcular tarifa
         $distanciaKm      = $this->calcularDistanciaKm($latOrigen, $lngOrigen, $request->lat_destino, $request->lng_destino);
         $costoEnvio       = $this->calcularTarifa($distanciaKm);
         $tarifaPlataforma = round($costoEnvio * 0.10, 2);
@@ -55,6 +62,7 @@ class ViajeController extends Controller
             $servicio = Servicio::create([
                 'cliente_id'        => Auth::id(),
                 'conductor_id'      => null,
+                'punto_recoleccion_id' => $puntoMasCercano?->id,
                 'tipo'              => 'viaje',
                 'estatus'           => 'buscando',
                 'direccion_origen'  => $request->direccion_origen,
@@ -92,6 +100,24 @@ class ViajeController extends Controller
             ->findOrFail($id);
 
         return view('viajes.en-camino', compact('servicio'));
+    }
+
+    // -----------------------------------------------
+    // Cancelar viaje
+    // -----------------------------------------------
+
+    public function cancelar($id)
+    {
+        $servicio = Servicio::where('cliente_id', Auth::id())
+            ->whereIn('estatus', ['buscando', 'aceptado'])
+            ->findOrFail($id);
+
+        $servicio->update([
+            'estatus'      => 'cancelado',
+            'finalizado_en' => now(),
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Viaje cancelado.');
     }
 
     // -----------------------------------------------

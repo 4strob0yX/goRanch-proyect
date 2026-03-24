@@ -233,7 +233,31 @@ function togglePago(tipo) {
 function validarViaje() {
     if (!document.getElementById('lat_origen').value) { alert('Selecciona tu punto de origen en el mapa.'); return false; }
     if (!document.getElementById('lat_destino').value) { alert('Selecciona tu destino en el mapa.'); return false; }
-    return true;
+
+    // Check conductor availability (non-blocking warning)
+    const lat = document.getElementById('lat_origen').value;
+    const lng = document.getElementById('lng_origen').value;
+    const btn = document.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Verificando disponibilidad...';
+
+    fetch(`/api/conductores-disponibles?lat=${lat}&lng=${lng}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.disponibles === 0) {
+                if (!confirm('No hay conductores conectados en tu zona en este momento. ¿Deseas continuar de todos modos? Tu solicitud quedará en espera.')) {
+                    btn.disabled = false;
+                    btn.textContent = 'Confirmar Viaje →';
+                    return;
+                }
+            }
+            btn.closest('form').submit();
+        })
+        .catch(() => {
+            btn.closest('form').submit();
+        });
+
+    return false; // Prevent default, we submit manually after check
 }
 </script>
 @endpush

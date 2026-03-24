@@ -232,6 +232,60 @@
                 </div>
             @endif
 
+            {{-- Servicio activo --}}
+            @if($servicioActivo)
+            <div class="active-srv-card" style="margin-bottom:2rem;">
+                <div class="section-head">
+                    <div class="section-title" style="display:flex;align-items:center;gap:.5rem;">
+                        <span style="font-size:1.1rem;">🟢</span> Servicio en curso
+                    </div>
+                </div>
+                @php
+                    $icoActivo = ['viaje'=>'🚗','mandado_libre'=>'🛒','delivery_tienda'=>'🏪'];
+                    $tipoActivo = ['viaje'=>'Viaje','mandado_libre'=>'Mandado','delivery_tienda'=>'Delivery'];
+                    $estatusLabel = ['aceptado'=>'Aceptado','en_sitio'=>'En sitio','en_ruta'=>'En ruta'];
+                @endphp
+                <div style="background:linear-gradient(135deg,rgba(74,222,128,.12),rgba(74,222,128,.04));border:1.5px solid rgba(74,222,128,.3);border-radius:var(--r-md);padding:1.2rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+                        <div style="display:flex;align-items:center;gap:.5rem;font-weight:700;color:#4ade80;">
+                            {{ $icoActivo[$servicioActivo->tipo] ?? '📦' }} {{ $tipoActivo[$servicioActivo->tipo] ?? $servicioActivo->tipo }}
+                        </div>
+                        <div style="font-family:var(--font-display);font-weight:700;font-size:1.15rem;color:#4ade80;">
+                            ${{ number_format($servicioActivo->total_final, 2) }}
+                        </div>
+                    </div>
+                    <div style="font-size:.82rem;color:rgba(255,255,255,.6);margin-bottom:.15rem;">📍 {{ $servicioActivo->direccion_origen }}</div>
+                    <div style="font-size:.82rem;color:rgba(255,255,255,.6);margin-bottom:.6rem;">🏁 {{ $servicioActivo->direccion_destino }}</div>
+                    <div style="font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:1rem;">
+                        {{ $servicioActivo->cliente->nombre ?? 'Cliente' }} · Estatus: <strong style="color:#4ade80;">{{ $estatusLabel[$servicioActivo->estatus] ?? ucfirst(str_replace('_',' ',$servicioActivo->estatus)) }}</strong>
+                    </div>
+
+                    {{-- Botones de avance de estatus --}}
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                        @if($servicioActivo->estatus === 'aceptado')
+                            <form method="POST" action="{{ route('conductor.servicio.estatus', $servicioActivo->id) }}" style="flex:1;">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="estatus" value="en_sitio">
+                                <button type="submit" class="btn-aceptar" style="width:100%;">📍 Llegué al sitio</button>
+                            </form>
+                        @elseif($servicioActivo->estatus === 'en_sitio')
+                            <form method="POST" action="{{ route('conductor.servicio.estatus', $servicioActivo->id) }}" style="flex:1;">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="estatus" value="en_ruta">
+                                <button type="submit" class="btn-aceptar" style="width:100%;">🚗 Iniciar ruta</button>
+                            </form>
+                        @elseif($servicioActivo->estatus === 'en_ruta')
+                            <form method="POST" action="{{ route('conductor.servicio.estatus', $servicioActivo->id) }}" style="flex:1;">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="estatus" value="completado">
+                                <button type="submit" class="btn-aceptar" style="width:100%;background:#22c55e;">✓ Completar servicio</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Servicios pendientes (polling) --}}
             @if($conductor->esta_conectado)
             <div id="pendientes-section" style="margin-bottom:2rem;">

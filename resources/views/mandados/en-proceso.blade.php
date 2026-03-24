@@ -134,22 +134,42 @@
         <div class="resumen-total"><span>Total estimado</span><span>${{ number_format($servicio->total_final, 2) }}</span></div>
     </div>
 
+    @if(in_array($servicio->estatus, ['buscando', 'aceptado']))
+    <form method="POST" action="{{ route('mandado.cancelar', $servicio->id) }}" onsubmit="return confirm('¿Estás seguro de cancelar este mandado?')" style="margin-top:1rem;">
+        @csrf
+        <button type="submit" class="btn-cancelar">Cancelar mandado</button>
+    </form>
+    @endif
+
 </div>
 
-@if(!$servicio->conductor)
 @push('styles')
 <style>
     .searching-spinner { width: 36px; height: 36px; border: 3px solid var(--borde); border-top-color: var(--verde); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-cancelar { width: 100%; padding: .8rem; border-radius: var(--r-md); border: 1.5px solid rgba(239,68,68,.25); background: rgba(239,68,68,.06); color: #ef4444; font-weight: 600; font-size: .88rem; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+    .btn-cancelar:hover { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.4); }
 </style>
 @endpush
+
+@if(!$servicio->conductor)
 @push('scripts')
 <script>
+const createdAt = new Date('{{ $servicio->creado_en->toIso8601String() }}');
+const TIMEOUT_MS = 5 * 60 * 1000;
+
 function pollStatus() {
+    if (Date.now() - createdAt.getTime() > TIMEOUT_MS) {
+        document.querySelector('.btn-cancelar')?.form?.submit();
+        return;
+    }
+
     fetch('{{ route("api.servicio.status", $servicio->id) }}')
         .then(r => r.json())
         .then(data => {
-            if (data.estatus !== 'buscando' && data.conductor) {
+            if (data.estatus === 'cancelado') {
+                window.location.href = '{{ route("dashboard") }}';
+            } else if (data.estatus !== 'buscando' && data.conductor) {
                 location.reload();
             }
         })

@@ -147,23 +147,44 @@
         <div class="monto-lbl">Total estimado · {{ ucfirst($servicio->metodo_pago) }}</div>
         <div class="monto-val">${{ number_format($servicio->total_final, 2) }}</div>
     </div>
+
+    @if(in_array($servicio->estatus, ['buscando', 'aceptado']))
+    <form method="POST" action="{{ route('viaje.cancelar', $servicio->id) }}" onsubmit="return confirm('¿Estás seguro de cancelar este viaje?')">
+        @csrf
+        <button type="submit" class="btn-cancelar">Cancelar viaje</button>
+    </form>
+    @endif
 </div>
 
-@if(!$servicio->conductor)
 @push('styles')
 <style>
     .searching-spinner { width: 36px; height: 36px; border: 3px solid var(--borde); border-top-color: var(--verde); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-cancelar { width: 100%; padding: .8rem; border-radius: var(--r-md); border: 1.5px solid rgba(239,68,68,.25); background: rgba(239,68,68,.06); color: #ef4444; font-weight: 600; font-size: .88rem; cursor: pointer; font-family: var(--font-body); margin-top: .8rem; transition: all .15s; }
+    .btn-cancelar:hover { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.4); }
+    .timeout-warn { text-align: center; font-size: .75rem; color: var(--gris); margin-top: .6rem; }
 </style>
 @endpush
+
+@if(!$servicio->conductor)
 @push('scripts')
 <script>
+const createdAt = new Date('{{ $servicio->creado_en->toIso8601String() }}');
+const TIMEOUT_MS = 5 * 60 * 1000; // 5 min
+
 function pollStatus() {
+    // Auto-cancel timeout
+    if (Date.now() - createdAt.getTime() > TIMEOUT_MS) {
+        document.querySelector('.btn-cancelar')?.form?.submit();
+        return;
+    }
+
     fetch('{{ route("api.servicio.status", $servicio->id) }}')
         .then(r => r.json())
         .then(data => {
-            if (data.estatus !== 'buscando' && data.conductor) {
-                // Conductor found — reload page to show full info
+            if (data.estatus === 'cancelado') {
+                window.location.href = '{{ route("dashboard") }}';
+            } else if (data.estatus !== 'buscando' && data.conductor) {
                 location.reload();
             }
         })

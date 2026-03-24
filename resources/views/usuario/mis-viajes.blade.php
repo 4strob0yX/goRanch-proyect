@@ -142,12 +142,12 @@
                 <div class="vc-monto">${{ number_format($s->total_final, 2) }}</div>
             </div>
 
-            @if($s->estatus === 'en_ruta' || $s->estatus === 'aceptado' || $s->estatus === 'en_sitio')
+            @if(in_array($s->estatus, ['buscando', 'aceptado', 'en_sitio', 'en_ruta']))
                 <a href="{{ $s->tipo === 'mandado_libre'
                     ? route('mandado.en-proceso', $s->id)
                     : route('viaje.en-camino', $s->id) }}"
                     class="btn btn-primary btn-full btn-sm" style="margin-top:.8rem; border-radius:var(--r-sm);">
-                    Ver en tiempo real →
+                    {{ $s->estatus === 'buscando' ? 'Esperando conductor →' : 'Ver en tiempo real →' }}
                 </a>
             @endif
             @if($s->estatus === 'completado' && $s->conductor && !$s->calificacion_cliente)

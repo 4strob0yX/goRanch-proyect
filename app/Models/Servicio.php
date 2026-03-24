@@ -13,7 +13,7 @@ class Servicio extends Model
     const CREATED_AT = 'creado_en';
 
     protected $fillable = [
-        'cliente_id', 'conductor_id', 'tienda_id',
+        'cliente_id', 'conductor_id', 'tienda_id', 'punto_recoleccion_id',
         'tipo', 'estatus',
         'direccion_origen', 'direccion_destino',
         'ubicacion_origen', 'ubicacion_destino',
@@ -37,6 +37,11 @@ class Servicio extends Model
     public function conductor()
     {
         return $this->belongsTo(Conductor::class, 'conductor_id');
+    }
+
+    public function puntoRecoleccion()
+    {
+        return $this->belongsTo(PuntoRecoleccion::class, 'punto_recoleccion_id');
     }
 
     public function estaCompletado(): bool { return $this->estatus === 'completado'; }

@@ -317,7 +317,31 @@ function prepararEnvio() {
             <input type="hidden" name="items[${i}][precio_est]" value="0">
         `;
     });
-    return true;
+
+    // Check conductor availability
+    const lat = document.getElementById('lat_origen').value;
+    const lng = document.getElementById('lng_origen').value;
+    const btn = document.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Verificando disponibilidad...';
+
+    fetch(`/api/conductores-disponibles?lat=${lat}&lng=${lng}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.disponibles === 0) {
+                if (!confirm('No hay conductores conectados en tu zona en este momento. ¿Deseas continuar? Tu solicitud quedará en espera.')) {
+                    btn.disabled = false;
+                    btn.textContent = 'Pedir Mandado →';
+                    return;
+                }
+            }
+            btn.closest('form').submit();
+        })
+        .catch(() => {
+            btn.closest('form').submit();
+        });
+
+    return false;
 }
 </script>
 @endpush

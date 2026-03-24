@@ -65,14 +65,33 @@ Route::middleware(['auth', 'rol:usuario'])->group(function () {
     Route::get('/viaje/{id}/en-camino', [ViajeController::class, 'enCamino'])->name('viaje.en-camino');
     Route::get('/viaje/{id}/finalizado', [ViajeController::class, 'finalizado'])->name('viaje.finalizado');
     Route::post('/viaje/{id}/calificar', [ViajeController::class, 'calificar'])->name('viaje.calificar');
+    Route::post('/viaje/{id}/cancelar', [ViajeController::class, 'cancelar'])->name('viaje.cancelar');
 
     // Mandados
     Route::get('/mandado/nuevo', [MandadoController::class, 'nuevo'])->name('mandado.nuevo');
     Route::post('/mandado', [MandadoController::class, 'store'])->name('mandado.store');
     Route::get('/mandado/{id}/en-proceso', [MandadoController::class, 'enProceso'])->name('mandado.en-proceso');
+    Route::post('/mandado/{id}/cancelar', [MandadoController::class, 'cancelar'])->name('mandado.cancelar');
+
+    // API: verificar conductores disponibles cerca de un punto
+    Route::get('/api/conductores-disponibles', function (\Illuminate\Http\Request $request) {
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+        if (!$lat || !$lng) return response()->json(['disponibles' => 0]);
+
+        $punto = \App\Models\PuntoRecoleccion::masCercanoA((float)$lat, (float)$lng);
+        if (!$punto) return response()->json(['disponibles' => 0]);
+
+        $count = \App\Models\Conductor::where('punto_recoleccion_id', $punto->id)
+            ->where('esta_conectado', true)
+            ->where('estatus', 'activo')
+            ->count();
+
+        return response()->json(['disponibles' => $count, 'punto' => $punto->nombre]);
+    })->name('api.conductores.disponibles');
 
     // API polling: cliente checa estatus de su servicio
-    Route::get('/api/servicio/{id}/status', function ($id) {
+    Route::middleware('throttle:30,1')->get('/api/servicio/{id}/status', function ($id) {
         $servicio = \App\Models\Servicio::with('conductor.usuario')
             ->where('cliente_id', \Illuminate\Support\Facades\Auth::id())
             ->findOrFail($id);
@@ -98,10 +117,12 @@ Route::middleware(['auth', 'rol:conductor', 'conductor.activo'])->prefix('conduc
     Route::post('/desconectar', [ConductorController::class, 'desconectar'])->name('conductor.desconectar');
     Route::patch('/servicio/{id}/estatus', [ConductorController::class, 'actualizarServicio'])->name('conductor.servicio.estatus');
 
-    // API polling
-    Route::get('/api/servicios-pendientes', [ConductorController::class, 'serviciosPendientes'])->name('conductor.api.pendientes');
-    Route::post('/api/servicio/{id}/aceptar', [ConductorController::class, 'aceptarServicio'])->name('conductor.api.aceptar');
-    Route::post('/api/servicio/{id}/rechazar', [ConductorController::class, 'rechazarServicio'])->name('conductor.api.rechazar');
+    // API polling (rate limited)
+    Route::middleware('throttle:20,1')->group(function () {
+        Route::get('/api/servicios-pendientes', [ConductorController::class, 'serviciosPendientes'])->name('conductor.api.pendientes');
+        Route::post('/api/servicio/{id}/aceptar', [ConductorController::class, 'aceptarServicio'])->name('conductor.api.aceptar');
+        Route::post('/api/servicio/{id}/rechazar', [ConductorController::class, 'rechazarServicio'])->name('conductor.api.rechazar');
+    });
 });
 
 // -----------------------------------------------

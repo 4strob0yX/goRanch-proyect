@@ -52,7 +52,14 @@ class MandadoController extends Controller
         $latOrigen = $request->lat_origen;
         $lngOrigen = $request->lng_origen;
 
-        // 1. Calcular costos
+        // 1. Punto de recolección más cercano al origen
+        $puntoMasCercano = PuntoRecoleccion::masCercanoA($latOrigen, $lngOrigen);
+
+        if (!$puntoMasCercano) {
+            return back()->withInput()->withErrors(['sin_cobertura' => 'No hay puntos de recolección activos en tu zona. Intenta más tarde.']);
+        }
+
+        // 2. Calcular costos
         $distanciaKm      = $this->calcularDistanciaKm($latOrigen, $lngOrigen, $request->lat_destino, $request->lng_destino);
         $costoEnvio       = $this->calcularTarifa($distanciaKm);
         $costoProductos   = collect($request->items)->sum(fn($i) => ($i['precio_est'] ?? 0) * $i['cantidad']);
@@ -65,6 +72,7 @@ class MandadoController extends Controller
             $servicio = Servicio::create([
                 'cliente_id'        => Auth::id(),
                 'conductor_id'      => null,
+                'punto_recoleccion_id' => $puntoMasCercano?->id,
                 'tipo'              => 'mandado_libre',
                 'estatus'           => 'buscando',
                 'direccion_origen'  => $request->direccion_origen,
@@ -118,6 +126,24 @@ class MandadoController extends Controller
         $items = DB::table('detalle_servicios')->where('servicio_id', $id)->get();
 
         return view('mandados.en-proceso', compact('servicio', 'items'));
+    }
+
+    // -----------------------------------------------
+    // Cancelar mandado
+    // -----------------------------------------------
+
+    public function cancelar($id)
+    {
+        $servicio = Servicio::where('cliente_id', Auth::id())
+            ->whereIn('estatus', ['buscando', 'aceptado'])
+            ->findOrFail($id);
+
+        $servicio->update([
+            'estatus'      => 'cancelado',
+            'finalizado_en' => now(),
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Mandado cancelado.');
     }
 
     // -----------------------------------------------
