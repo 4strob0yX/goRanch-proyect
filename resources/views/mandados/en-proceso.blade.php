@@ -90,31 +90,38 @@
         @endforeach
     </div>
 
-    {{-- Conductor --}}
-    @if($servicio->conductor)
-        <div class="conductor-card">
-            <div class="c-avatar">{{ strtoupper(substr($servicio->conductor->usuario->nombre ?? 'C', 0, 2)) }}</div>
-            <div>
-                <div class="c-name">{{ $servicio->conductor->usuario->nombre ?? 'Conductor' }}</div>
-                <div class="c-sub">{{ ucfirst($servicio->conductor->tipo_vehiculo) }} · {{ $servicio->conductor->placa }}</div>
-                <div class="c-rating">⭐ {{ $servicio->conductor->calificacion_promedio }}</div>
+    {{-- Conductor o buscando --}}
+    <div id="conductor-area">
+        @if($servicio->conductor)
+            <div class="conductor-card">
+                <div class="c-avatar">{{ strtoupper(substr($servicio->conductor->usuario->nombre ?? 'C', 0, 2)) }}</div>
+                <div>
+                    <div class="c-name">{{ $servicio->conductor->usuario->nombre ?? 'Conductor' }}</div>
+                    <div class="c-sub">{{ ucfirst($servicio->conductor->tipo_vehiculo) }} · {{ $servicio->conductor->placa }}</div>
+                    <div class="c-rating">⭐ {{ $servicio->conductor->calificacion_promedio }}</div>
+                </div>
+                <a href="tel:" style="margin-left:auto; width:36px; height:36px; border-radius:50%; background:var(--verde-bg); border:1px solid var(--verde-claro); display:flex; align-items:center; justify-content:center; color:var(--verde-oscuro); text-decoration:none;">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.81a2 2 0 012-2.18H8a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L9.91 15a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                </a>
             </div>
-            <a href="tel:" style="margin-left:auto; width:36px; height:36px; border-radius:50%; background:var(--verde-bg); border:1px solid var(--verde-claro); display:flex; align-items:center; justify-content:center; color:var(--verde-oscuro); text-decoration:none;">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.81a2 2 0 012-2.18H8a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L9.91 15a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-            </a>
-        </div>
-    @endif
+        @else
+            <div class="conductor-card" id="buscando-card" style="justify-content:center; flex-direction:column; align-items:center; gap:.6rem; padding:1.5rem;">
+                <div class="searching-spinner"></div>
+                <div style="font-weight:700; font-size:.95rem; color:var(--texto);">Buscando conductor...</div>
+                <div style="font-size:.78rem; color:var(--gris); text-align:center;">Estamos notificando a los conductores cercanos.<br>Esto puede tomar unos momentos.</div>
+            </div>
+        @endif
+    </div>
 
-    {{-- Items --}}
-    @php $items = json_decode($servicio->notas, true) ?? []; @endphp
-    @if(count($items))
+    {{-- Items from detalle_servicios --}}
+    @if($items->count())
         <div class="items-card">
-            <div class="ic-header">Tu lista ({{ count($items) }} artículos)</div>
+            <div class="ic-header">Tu lista ({{ $items->count() }} artículos)</div>
             @foreach($items as $item)
                 <div class="ic-item">
                     <div class="ic-check"><svg width="11" height="11" fill="none" stroke="var(--verde)" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-                    <div class="ic-nombre">{{ $item['nombre'] ?? '' }}</div>
-                    <div class="ic-qty">×{{ $item['cantidad'] ?? 1 }}</div>
+                    <div class="ic-nombre">{{ $item->nombre }}</div>
+                    <div class="ic-qty">×{{ $item->cantidad }}</div>
                 </div>
             @endforeach
         </div>
@@ -128,4 +135,28 @@
     </div>
 
 </div>
+
+@if(!$servicio->conductor)
+@push('styles')
+<style>
+    .searching-spinner { width: 36px; height: 36px; border: 3px solid var(--borde); border-top-color: var(--verde); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+@endpush
+@push('scripts')
+<script>
+function pollStatus() {
+    fetch('{{ route("api.servicio.status", $servicio->id) }}')
+        .then(r => r.json())
+        .then(data => {
+            if (data.estatus !== 'buscando' && data.conductor) {
+                location.reload();
+            }
+        })
+        .catch(() => {});
+}
+setInterval(pollStatus, 4000);
+</script>
+@endpush
+@endif
 @endsection

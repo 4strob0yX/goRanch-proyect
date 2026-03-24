@@ -131,7 +131,9 @@ class AdminController extends Controller
 
     public function puntos()
     {
-        $puntos = \App\Models\PuntoRecoleccion::orderBy('nombre')->get();
+        $puntos = \App\Models\PuntoRecoleccion::orderBy('nombre')
+            ->selectRaw('*, ST_Y(ubicacion) as lat, ST_X(ubicacion) as lng')
+            ->get();
         return view('admin.puntos', compact('puntos'));
     }
 
@@ -157,6 +159,8 @@ class AdminController extends Controller
         $request->validate([
             'nombre'    => 'required|string|max:100',
             'direccion' => 'required|string',
+            'lat'       => 'nullable|numeric',
+            'lng'       => 'nullable|numeric',
         ]);
 
         $punto = \App\Models\PuntoRecoleccion::findOrFail($id);
@@ -164,6 +168,13 @@ class AdminController extends Controller
             'nombre'    => $request->nombre,
             'direccion' => $request->direccion,
         ]);
+
+        if ($request->filled('lat') && $request->filled('lng')) {
+            \Illuminate\Support\Facades\DB::statement(
+                "UPDATE puntos_recoleccion SET ubicacion = ST_GeomFromText(?, 4326) WHERE id = ?",
+                ["POINT({$request->lng} {$request->lat})", $id]
+            );
+        }
 
         return back()->with('success', "Punto actualizado correctamente.");
     }

@@ -70,6 +70,22 @@ Route::middleware(['auth', 'rol:usuario'])->group(function () {
     Route::get('/mandado/nuevo', [MandadoController::class, 'nuevo'])->name('mandado.nuevo');
     Route::post('/mandado', [MandadoController::class, 'store'])->name('mandado.store');
     Route::get('/mandado/{id}/en-proceso', [MandadoController::class, 'enProceso'])->name('mandado.en-proceso');
+
+    // API polling: cliente checa estatus de su servicio
+    Route::get('/api/servicio/{id}/status', function ($id) {
+        $servicio = \App\Models\Servicio::with('conductor.usuario')
+            ->where('cliente_id', \Illuminate\Support\Facades\Auth::id())
+            ->findOrFail($id);
+        return response()->json([
+            'estatus'      => $servicio->estatus,
+            'conductor_id' => $servicio->conductor_id,
+            'conductor'    => $servicio->conductor ? [
+                'nombre'      => $servicio->conductor->usuario->nombre ?? 'Conductor',
+                'vehiculo'    => ucfirst($servicio->conductor->tipo_vehiculo) . ' ' . $servicio->conductor->placa,
+                'calificacion'=> $servicio->conductor->calificacion_promedio,
+            ] : null,
+        ]);
+    })->name('api.servicio.status');
 });
 
 // -----------------------------------------------
@@ -81,6 +97,11 @@ Route::middleware(['auth', 'rol:conductor', 'conductor.activo'])->prefix('conduc
     Route::post('/conectar', [ConductorController::class, 'conectar'])->name('conductor.conectar');
     Route::post('/desconectar', [ConductorController::class, 'desconectar'])->name('conductor.desconectar');
     Route::patch('/servicio/{id}/estatus', [ConductorController::class, 'actualizarServicio'])->name('conductor.servicio.estatus');
+
+    // API polling
+    Route::get('/api/servicios-pendientes', [ConductorController::class, 'serviciosPendientes'])->name('conductor.api.pendientes');
+    Route::post('/api/servicio/{id}/aceptar', [ConductorController::class, 'aceptarServicio'])->name('conductor.api.aceptar');
+    Route::post('/api/servicio/{id}/rechazar', [ConductorController::class, 'rechazarServicio'])->name('conductor.api.rechazar');
 });
 
 // -----------------------------------------------

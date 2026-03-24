@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Conductor;
 use App\Models\PuntoRecoleccion;
 use App\Models\Servicio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ViajeController extends Controller
 {
@@ -17,7 +17,9 @@ class ViajeController extends Controller
 
     public function nuevo()
     {
-        $puntos = PuntoRecoleccion::where('activo', true)->get();
+        $puntos = PuntoRecoleccion::where('activo', true)
+            ->selectRaw('*, ST_Y(ubicacion) as lat, ST_X(ubicacion) as lng')
+            ->get();
         return view('viajes.nuevo', compact('puntos'));
     }
 
@@ -41,30 +43,7 @@ class ViajeController extends Controller
         $latOrigen = $request->lat_origen;
         $lngOrigen = $request->lng_origen;
 
-        // 1. Punto de recolección más cercano al usuario
-        $puntoMasCercano = PuntoRecoleccion::masCercanoA($latOrigen, $lngOrigen);
-
-        if (!$puntoMasCercano) {
-            return back()->withErrors(['sin_cobertura' => 'No hay puntos de recolección activos en tu zona.']);
-        }
-
-        // 2. Conductor disponible en ese punto (mejor calificado primero)
-        $conductor = Conductor::where('punto_recoleccion_id', $puntoMasCercano->id)
-            ->where('esta_conectado', true)
-            ->where('estatus', 'activo')
-            ->orderByDesc('calificacion_promedio')
-            ->first();
-
-        // Fallback: cualquier conductor disponible
-        if (!$conductor) {
-            $conductor = Conductor::where('esta_conectado', true)
-                ->where('estatus', 'activo')
-                ->whereNotNull('punto_recoleccion_id')
-                ->orderByDesc('calificacion_promedio')
-                ->first();
-        }
-
-        // 3. Calcular tarifa
+        // 1. Calcular tarifa
         $distanciaKm      = $this->calcularDistanciaKm($latOrigen, $lngOrigen, $request->lat_destino, $request->lng_destino);
         $costoEnvio       = $this->calcularTarifa($distanciaKm);
         $tarifaPlataforma = round($costoEnvio * 0.10, 2);
@@ -75,9 +54,9 @@ class ViajeController extends Controller
         try {
             $servicio = Servicio::create([
                 'cliente_id'        => Auth::id(),
-                'conductor_id'      => $conductor?->id,
+                'conductor_id'      => null,
                 'tipo'              => 'viaje',
-                'estatus'           => $conductor ? 'aceptado' : 'buscando',
+                'estatus'           => 'buscando',
                 'direccion_origen'  => $request->direccion_origen,
                 'direccion_destino' => $request->direccion_destino,
                 'ubicacion_origen'  => DB::raw("ST_GeomFromText('POINT({$lngOrigen} {$latOrigen})', 4326)"),
@@ -89,13 +68,14 @@ class ViajeController extends Controller
                 'total_final'       => $totalFinal,
                 'metodo_pago'       => $request->metodo_pago,
                 'notas'             => $request->notas,
-                'iniciado_en'       => $conductor ? now() : null,
+                'iniciado_en'       => null,
             ]);
 
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Error al crear el viaje. Intenta de nuevo.']);
+            Log::error('Error al crear viaje: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Error al crear el viaje: ' . $e->getMessage()]);
         }
 
         return redirect()->route('viaje.en-camino', $servicio->id);

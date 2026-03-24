@@ -23,7 +23,11 @@
     /* Modal overlay */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
-    .modal { background: var(--blanco); border-radius: var(--r-xl); padding: 2rem; width: 100%; max-width: 480px; box-shadow: var(--sombra-lg); position: relative; }
+    .modal { background: var(--blanco); border-radius: var(--r-xl); padding: 2rem; width: 100%; max-width: 560px; box-shadow: var(--sombra-lg); position: relative; max-height: 90vh; overflow-y: auto; }
+    #modal-map { width: 100%; height: 220px; border-radius: 10px; border: 1.5px solid var(--borde); margin-bottom: .6rem; z-index: 1; }
+    .map-hint-admin { font-size: .78rem; color: var(--gris); margin-bottom: .8rem; }
+    .map-addr-display { background: var(--verde-bg); border: 1px solid var(--verde-claro); border-radius: 8px; padding: .5rem .8rem; font-size: .82rem; color: var(--verde-oscuro); font-weight: 500; margin-bottom: .5rem; min-height: 32px; }
+    .map-addr-display.empty { background: var(--fondo); border-color: var(--borde); color: var(--gris); }
     .modal-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; margin-bottom: .3rem; }
     .modal-sub { font-size: .875rem; color: var(--gris); margin-bottom: 1.5rem; }
     .modal-close { position: absolute; top: 1.2rem; right: 1.2rem; background: var(--fondo); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gris); font-size: 1rem; }
@@ -156,7 +160,7 @@
                                     </td>
                                     <td>
                                         <div style="display:flex; gap:.4rem;">
-                                            <button onclick="abrirEditar({{ $p->id }}, '{{ addslashes($p->nombre) }}', '{{ addslashes($p->direccion) }}', {{ $p->activo ? 'true' : 'false' }})"
+                                            <button onclick="abrirEditar({{ $p->id }}, '{{ addslashes($p->nombre) }}', '{{ addslashes($p->direccion) }}', {{ $p->lat ?? 'null' }}, {{ $p->lng ?? 'null' }})"
                                                 class="btn btn-outline btn-sm" style="border-radius:var(--r-sm);">Editar</button>
                                             <form method="POST" action="{{ route('admin.puntos.toggle', $p->id) }}">
                                                 @csrf @method('PATCH')
@@ -204,24 +208,13 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Latitud</label>
-                <div class="input-wrap">
-                    <span class="input-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg></span>
-                    <input type="number" name="lat" id="input-lat" class="form-input" placeholder="Ej: 20.5000" step="0.000001" required>
-                </div>
+                <label class="form-label">Ubicación en el mapa</label>
+                <div class="map-hint-admin">Toca el mapa para elegir la ubicación del punto</div>
+                <div id="modal-map"></div>
+                <div class="map-addr-display empty" id="map-addr">Selecciona un punto en el mapa...</div>
+                <input type="hidden" name="lat" id="input-lat">
+                <input type="hidden" name="lng" id="input-lng">
             </div>
-
-            <div class="form-group">
-                <label class="form-label">Longitud</label>
-                <div class="input-wrap">
-                    <span class="input-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="22"/></svg></span>
-                    <input type="number" name="lng" id="input-lng" class="form-input" placeholder="Ej: -100.3500" step="0.000001" required>
-                </div>
-            </div>
-
-            <p style="font-size:.75rem; color:var(--gris); margin-bottom:1rem;">
-                💡 Puedes obtener las coordenadas en <a href="https://maps.google.com" target="_blank" style="color:var(--verde);">Google Maps</a> → clic derecho sobre el punto → copiar coordenadas.
-            </p>
 
             <button type="submit" class="btn btn-primary btn-full" style="border-radius:var(--r-sm);" id="modal-btn">Crear Punto</button>
         </form>
@@ -250,6 +243,71 @@ document.querySelectorAll('.sb-item').forEach(el => {
 </script>
 
 <script>
+let modalMap = null;
+let modalMarker = null;
+const defaultMapCenter = [20.5, -100.35];
+
+const greenIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+});
+
+function initModalMap(lat, lng) {
+    const center = (lat && lng) ? [lat, lng] : defaultMapCenter;
+
+    if (modalMap) {
+        modalMap.remove();
+        modalMap = null;
+        modalMarker = null;
+    }
+
+    // Small delay to ensure modal is visible before map init
+    setTimeout(() => {
+        modalMap = L.map('modal-map').setView(center, 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(modalMap);
+
+        if (lat && lng) {
+            modalMarker = L.marker([lat, lng], {icon: greenIcon}).addTo(modalMap);
+        }
+
+        modalMap.on('click', function(e) {
+            const {lat, lng} = e.latlng;
+            if (modalMarker) modalMap.removeLayer(modalMarker);
+            modalMarker = L.marker([lat, lng], {icon: greenIcon}).addTo(modalMap);
+            document.getElementById('input-lat').value = lat.toFixed(6);
+            document.getElementById('input-lng').value = lng.toFixed(6);
+            reverseGeocodeAdmin(lat, lng);
+        });
+    }, 100);
+}
+
+function reverseGeocodeAdmin(lat, lng) {
+    const el = document.getElementById('map-addr');
+    el.textContent = 'Buscando dirección...';
+    el.classList.remove('empty');
+
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: { 'Accept-Language': 'es' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        const addr = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        const short = addr.split(',').slice(0, 3).join(',');
+        el.textContent = short;
+        // Auto-fill address field if empty
+        const dirInput = document.getElementById('input-direccion');
+        if (!dirInput.value.trim()) {
+            dirInput.value = short;
+        }
+    })
+    .catch(() => {
+        el.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    });
+}
+
 function abrirModal() {
     document.getElementById('modal-title').textContent = 'Nuevo Punto';
     document.getElementById('modal-sub').textContent = 'Agrega un nuevo punto de recolección.';
@@ -260,10 +318,13 @@ function abrirModal() {
     document.getElementById('input-direccion').value = '';
     document.getElementById('input-lat').value = '';
     document.getElementById('input-lng').value = '';
+    document.getElementById('map-addr').textContent = 'Selecciona un punto en el mapa...';
+    document.getElementById('map-addr').classList.add('empty');
     document.getElementById('modal').classList.add('open');
+    initModalMap(null, null);
 }
 
-function abrirEditar(id, nombre, direccion, activo) {
+function abrirEditar(id, nombre, direccion, lat, lng) {
     document.getElementById('modal-title').textContent = 'Editar Punto';
     document.getElementById('modal-sub').textContent = 'Modifica los datos del punto.';
     document.getElementById('modal-form').action = '/admin/puntos/' + id;
@@ -271,11 +332,26 @@ function abrirEditar(id, nombre, direccion, activo) {
     document.getElementById('modal-btn').textContent = 'Guardar Cambios';
     document.getElementById('input-nombre').value = nombre;
     document.getElementById('input-direccion').value = direccion;
+    document.getElementById('input-lat').value = lat || '';
+    document.getElementById('input-lng').value = lng || '';
+    if (lat && lng) {
+        document.getElementById('map-addr').textContent = direccion;
+        document.getElementById('map-addr').classList.remove('empty');
+    } else {
+        document.getElementById('map-addr').textContent = 'Selecciona un punto en el mapa...';
+        document.getElementById('map-addr').classList.add('empty');
+    }
     document.getElementById('modal').classList.add('open');
+    initModalMap(lat, lng);
 }
 
 function cerrarModal() {
     document.getElementById('modal').classList.remove('open');
+    if (modalMap) {
+        modalMap.remove();
+        modalMap = null;
+        modalMarker = null;
+    }
 }
 
 document.getElementById('modal').addEventListener('click', function(e) {

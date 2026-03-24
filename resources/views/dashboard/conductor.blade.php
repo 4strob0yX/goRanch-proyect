@@ -232,6 +232,25 @@
                 </div>
             @endif
 
+            {{-- Servicios pendientes (polling) --}}
+            @if($conductor->esta_conectado)
+            <div id="pendientes-section" style="margin-bottom:2rem;">
+                <div class="section-head">
+                    <div class="section-title" style="display:flex;align-items:center;gap:.5rem;">
+                        <span id="bell-icon" style="font-size:1.2rem;">🔔</span>
+                        Solicitudes entrantes
+                        <span id="pendientes-count" style="background:#4ade80;color:#0c1509;font-size:.72rem;font-weight:700;padding:.15rem .55rem;border-radius:99px;display:none;">0</span>
+                    </div>
+                </div>
+                <div id="pendientes-list">
+                    <div class="empty-srv" id="no-pendientes">
+                        Esperando nuevas solicitudes...<br>
+                        <span style="font-size:.78rem;">Se revisa cada 5 segundos.</span>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Servicios --}}
             <div class="section-head">
                 <div class="section-title">Servicios recientes</div>
@@ -276,4 +295,151 @@
         </div>
     </div>
 </div>
+
+@if($conductor->esta_conectado)
+@push('styles')
+<style>
+    .pend-card { background: linear-gradient(135deg, rgba(74,222,128,.08), rgba(74,222,128,.02)); border: 1.5px solid rgba(74,222,128,.25); border-radius: var(--r-md); padding: 1.1rem 1.2rem; margin-bottom: .7rem; animation: slideIn .3s ease; }
+    @keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .pend-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem; }
+    .pend-tipo { display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: .9rem; color: #4ade80; }
+    .pend-precio { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: #4ade80; }
+    .pend-ruta { font-size: .82rem; color: rgba(255,255,255,.6); margin-bottom: .1rem; display: flex; align-items: center; gap: .4rem; }
+    .pend-cliente { font-size: .78rem; color: rgba(255,255,255,.35); margin-bottom: .7rem; }
+    .pend-actions { display: flex; gap: .5rem; }
+    .btn-aceptar { flex: 1; padding: .6rem; border-radius: var(--r-sm); border: none; background: #4ade80; color: #0c1509; font-weight: 700; font-size: .85rem; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+    .btn-aceptar:hover { background: #22c55e; transform: translateY(-1px); }
+    .btn-rechazar { padding: .6rem .9rem; border-radius: var(--r-sm); border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: rgba(255,255,255,.5); font-weight: 600; font-size: .85rem; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+    .btn-rechazar:hover { background: rgba(239,68,68,.15); color: #fca5a5; border-color: rgba(239,68,68,.25); }
+
+    @keyframes bellRing { 0%,100%{transform:rotate(0)} 15%{transform:rotate(14deg)} 30%{transform:rotate(-14deg)} 45%{transform:rotate(10deg)} 60%{transform:rotate(-10deg)} 75%{transform:rotate(4deg)} }
+    .bell-ringing { animation: bellRing .8s ease; }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+const iconos = {viaje:'🚗', mandado_libre:'🛒', delivery_tienda:'🏪'};
+const tipoLabel = {viaje:'Viaje', mandado_libre:'Mandado', delivery_tienda:'Delivery'};
+let prevIds = [];
+let alertSound = null;
+
+// Crear sonido de alerta con Web Audio API
+function playAlertSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        // Tono 1
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.connect(gain1); gain1.connect(ctx.destination);
+        osc1.frequency.value = 880;
+        osc1.type = 'sine';
+        gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc1.start(ctx.currentTime);
+        osc1.stop(ctx.currentTime + 0.3);
+        // Tono 2
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2); gain2.connect(ctx.destination);
+        osc2.frequency.value = 1100;
+        osc2.type = 'sine';
+        gain2.gain.setValueAtTime(0.3, ctx.currentTime + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc2.start(ctx.currentTime + 0.15);
+        osc2.stop(ctx.currentTime + 0.5);
+    } catch(e) {}
+}
+
+function fetchPendientes() {
+    fetch('{{ route("conductor.api.pendientes") }}')
+        .then(r => r.json())
+        .then(data => {
+            const list = document.getElementById('pendientes-list');
+            const badge = document.getElementById('pendientes-count');
+            const bell = document.getElementById('bell-icon');
+
+            if (!data.servicios || data.servicios.length === 0) {
+                list.innerHTML = `<div class="empty-srv" id="no-pendientes">Esperando nuevas solicitudes...<br><span style="font-size:.78rem;">Se revisa cada 5 segundos.</span></div>`;
+                badge.style.display = 'none';
+                return;
+            }
+
+            // Detectar nuevos servicios
+            const newIds = data.servicios.map(s => s.id);
+            const isNew = newIds.some(id => !prevIds.includes(id));
+            if (isNew && prevIds.length > 0) {
+                playAlertSound();
+                bell.classList.remove('bell-ringing');
+                void bell.offsetWidth;
+                bell.classList.add('bell-ringing');
+            }
+            if (prevIds.length === 0 && newIds.length > 0) {
+                playAlertSound();
+            }
+            prevIds = newIds;
+
+            badge.textContent = data.servicios.length;
+            badge.style.display = 'inline';
+
+            list.innerHTML = data.servicios.map(s => `
+                <div class="pend-card" id="pend-${s.id}">
+                    <div class="pend-top">
+                        <div class="pend-tipo">${iconos[s.tipo]||'📦'} ${tipoLabel[s.tipo]||s.tipo}</div>
+                        <div class="pend-precio">$${parseFloat(s.total_final).toFixed(2)}</div>
+                    </div>
+                    <div class="pend-ruta">📍 ${s.direccion_origen} → ${s.direccion_destino}</div>
+                    <div class="pend-cliente">${s.cliente_nombre} · ${s.distancia_km} km</div>
+                    <div class="pend-actions">
+                        <button class="btn-aceptar" onclick="aceptar(${s.id})">✓ Aceptar</button>
+                        <button class="btn-rechazar" onclick="rechazar(${s.id})">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(() => {});
+}
+
+function aceptar(id) {
+    const btn = document.querySelector(`#pend-${id} .btn-aceptar`);
+    if (btn) { btn.textContent = 'Aceptando...'; btn.disabled = true; }
+
+    fetch(`/conductor/api/servicio/${id}/aceptar`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const card = document.getElementById(`pend-${id}`);
+            if (card) {
+                card.style.borderColor = '#4ade80';
+                card.innerHTML = `<div style="text-align:center;padding:.5rem;color:#4ade80;font-weight:700;">✓ Servicio aceptado — recarga para ver detalles</div>`;
+            }
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            alert(data.msg || 'No se pudo aceptar.');
+            fetchPendientes();
+        }
+    })
+    .catch(() => { alert('Error de conexión.'); if(btn){ btn.textContent='✓ Aceptar'; btn.disabled=false; } });
+}
+
+function rechazar(id) {
+    fetch(`/conductor/api/servicio/${id}/rechazar`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', 'Accept': 'application/json' }
+    }).then(() => {
+        const card = document.getElementById(`pend-${id}`);
+        if (card) card.remove();
+    });
+}
+
+// Iniciar polling
+fetchPendientes();
+setInterval(fetchPendientes, 5000);
+</script>
+@endpush
+@endif
 @endsection
