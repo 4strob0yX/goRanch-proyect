@@ -241,7 +241,7 @@ function validarViaje() {
     btn.disabled = true;
     btn.textContent = 'Verificando disponibilidad...';
 
-    fetch(`/api/conductores-disponibles?lat=${lat}&lng=${lng}`)
+    fetch(`/web-api/conductores-disponibles?lat=${lat}&lng=${lng}`)
         .then(r => r.json())
         .then(data => {
             if (data.disponibles === 0) {

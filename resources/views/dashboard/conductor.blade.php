@@ -459,7 +459,7 @@ function aceptar(id) {
     const btn = document.querySelector(`#pend-${id} .btn-aceptar`);
     if (btn) { btn.textContent = 'Aceptando...'; btn.disabled = true; }
 
-    fetch(`/conductor/api/servicio/${id}/aceptar`, {
+    fetch(`/conductor/web-api/servicio/${id}/aceptar`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', 'Accept': 'application/json' }
     })
@@ -481,7 +481,7 @@ function aceptar(id) {
 }
 
 function rechazar(id) {
-    fetch(`/conductor/api/servicio/${id}/rechazar`, {
+    fetch(`/conductor/web-api/servicio/${id}/rechazar`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', 'Accept': 'application/json' }
     }).then(() => {

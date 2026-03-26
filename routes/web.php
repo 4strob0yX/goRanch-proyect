@@ -74,7 +74,7 @@ Route::middleware(['auth', 'rol:usuario'])->group(function () {
     Route::post('/mandado/{id}/cancelar', [MandadoController::class, 'cancelar'])->name('mandado.cancelar');
 
     // API: verificar conductores disponibles cerca de un punto
-    Route::get('/api/conductores-disponibles', function (\Illuminate\Http\Request $request) {
+    Route::get('/web-api/conductores-disponibles', function (\Illuminate\Http\Request $request) {
         $lat = $request->query('lat');
         $lng = $request->query('lng');
         if (!$lat || !$lng) return response()->json(['disponibles' => 0]);
@@ -91,7 +91,7 @@ Route::middleware(['auth', 'rol:usuario'])->group(function () {
     })->name('api.conductores.disponibles');
 
     // API polling: cliente checa estatus de su servicio
-    Route::middleware('throttle:30,1')->get('/api/servicio/{id}/status', function ($id) {
+    Route::middleware('throttle:30,1')->get('/web-api/servicio/{id}/status', function ($id) {
         $servicio = \App\Models\Servicio::with('conductor.usuario')
             ->where('cliente_id', \Illuminate\Support\Facades\Auth::id())
             ->findOrFail($id);
@@ -119,9 +119,9 @@ Route::middleware(['auth', 'rol:conductor', 'conductor.activo'])->prefix('conduc
 
     // API polling (rate limited)
     Route::middleware('throttle:20,1')->group(function () {
-        Route::get('/api/servicios-pendientes', [ConductorController::class, 'serviciosPendientes'])->name('conductor.api.pendientes');
-        Route::post('/api/servicio/{id}/aceptar', [ConductorController::class, 'aceptarServicio'])->name('conductor.api.aceptar');
-        Route::post('/api/servicio/{id}/rechazar', [ConductorController::class, 'rechazarServicio'])->name('conductor.api.rechazar');
+        Route::get('/web-api/servicios-pendientes', [ConductorController::class, 'serviciosPendientes'])->name('conductor.api.pendientes');
+        Route::post('/web-api/servicio/{id}/aceptar', [ConductorController::class, 'aceptarServicio'])->name('conductor.api.aceptar');
+        Route::post('/web-api/servicio/{id}/rechazar', [ConductorController::class, 'rechazarServicio'])->name('conductor.api.rechazar');
     });
 });
 
