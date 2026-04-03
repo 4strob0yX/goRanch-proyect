@@ -63,40 +63,40 @@
 
         <div class="info-box">
             <span>⚠️</span>
-            <span>Asegúrate de que los documentos sean vigentes y la foto sea clara. Documentos borrosos serán rechazados.</span>
+            <span>Asegúrate de que los documentos sean vigentes y la foto sea clara. Máximo 900KB por archivo. Las imágenes se comprimen automáticamente.</span>
         </div>
 
-        <form method="POST" action="{{ route('conductor.registro.paso3.store') }}" enctype="multipart/form-data">
+        <form id="doc-form" method="POST" action="{{ route('conductor.registro.paso3.store') }}" enctype="multipart/form-data">
             @csrf
 
             <div class="doc-item" id="di-ine">
                 <div class="doc-ico">🪪</div>
                 <div>
                     <div class="doc-name">INE / Identificación oficial</div>
-                    <div class="doc-hint">Frente y vuelta visible</div>
+                    <div class="doc-hint">Frente y vuelta visible · Máx 900KB</div>
                 </div>
                 <div class="doc-status" id="st-ine">Subir</div>
-                <input type="file" name="ine" id="f-ine" class="doc-input" accept="image/*,.pdf" onchange="markDoc('ine')">
+                <input type="file" id="f-ine" class="doc-input" accept="image/*,.pdf" onchange="handleFile('ine', this)">
             </div>
 
             <div class="doc-item" id="di-licencia">
                 <div class="doc-ico">📋</div>
                 <div>
                     <div class="doc-name">Licencia de conducir</div>
-                    <div class="doc-hint">Vigente · Categoría correspondiente</div>
+                    <div class="doc-hint">Vigente · Máx 900KB</div>
                 </div>
                 <div class="doc-status" id="st-licencia">Subir</div>
-                <input type="file" name="licencia" id="f-licencia" class="doc-input" accept="image/*,.pdf" onchange="markDoc('licencia')">
+                <input type="file" id="f-licencia" class="doc-input" accept="image/*,.pdf" onchange="handleFile('licencia', this)">
             </div>
 
             <div class="doc-item" id="di-circulacion">
                 <div class="doc-ico">🚘</div>
                 <div>
                     <div class="doc-name">Tarjeta de circulación</div>
-                    <div class="doc-hint">Del vehículo registrado</div>
+                    <div class="doc-hint">Del vehículo registrado · Máx 900KB</div>
                 </div>
                 <div class="doc-status" id="st-circulacion">Subir</div>
-                <input type="file" name="tarjeta_circulacion" id="f-circulacion" class="doc-input" accept="image/*,.pdf" onchange="markDoc('circulacion')">
+                <input type="file" id="f-circulacion" class="doc-input" accept="image/*,.pdf" onchange="handleFile('circulacion', this)">
             </div>
 
             @error('ine') <p class="form-error">{{ $message }}</p> @enderror
@@ -105,7 +105,7 @@
 
             <div style="display:flex; gap:.7rem; margin-top:1rem;">
                 <a href="{{ route('conductor.registro.paso2') }}" class="btn btn-outline btn-lg" style="border-radius:var(--r-sm); flex:1;">← Atrás</a>
-                <button type="submit" class="btn btn-primary btn-lg" style="border-radius:var(--r-sm); flex:2;">Enviar solicitud ✓</button>
+                <button type="submit" id="btn-submit" class="btn btn-primary btn-lg" style="border-radius:var(--r-sm); flex:2;">Enviar solicitud ✓</button>
             </div>
         </form>
     </div>
@@ -113,16 +113,118 @@
 
 @push('scripts')
 <script>
-function markDoc(key) {
+const MAX_KB = 900;
+const compressedFiles = {}; // { ine: File, licencia: File, circulacion: File }
+const fieldMap = { ine: 'ine', licencia: 'licencia', circulacion: 'tarjeta_circulacion' };
+
+function markStatus(key, text, ok) {
     const el = document.getElementById('di-' + key);
     const st = document.getElementById('st-' + key);
-    const input = document.getElementById('f-' + key);
-    if(input.files.length > 0) {
-        el.classList.add('uploaded');
-        st.textContent = '✓ Listo';
-        st.classList.add('ok');
-    }
+    if (ok) { el.classList.add('uploaded'); st.classList.add('ok'); }
+    else { el.classList.remove('uploaded'); st.classList.remove('ok'); }
+    st.textContent = text;
 }
+
+function handleFile(key, input) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+
+    // PDF: solo validar tamaño
+    if (file.type === 'application/pdf') {
+        if (file.size > MAX_KB * 1024) {
+            alert('El PDF supera 900KB. Intenta con una imagen o un PDF más ligero.');
+            input.value = '';
+            markStatus(key, 'Subir', false);
+            delete compressedFiles[key];
+            return;
+        }
+        compressedFiles[key] = file;
+        markStatus(key, '✓ ' + (file.size / 1024).toFixed(0) + 'KB', true);
+        return;
+    }
+
+    // Imagen: comprimir con canvas
+    markStatus(key, 'Comprimiendo...', false);
+    compressImage(file, MAX_KB).then(blob => {
+        const compressed = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
+        compressedFiles[key] = compressed;
+        markStatus(key, '✓ ' + (compressed.size / 1024).toFixed(0) + 'KB', true);
+    }).catch(() => {
+        markStatus(key, 'Error', false);
+        alert('No se pudo comprimir la imagen. Intenta con otra.');
+    });
+}
+
+function compressImage(file, maxKB) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            const MAX_DIM = 1200;
+            if (w > MAX_DIM || h > MAX_DIM) {
+                const ratio = Math.min(MAX_DIM / w, MAX_DIM / h);
+                w = Math.round(w * ratio);
+                h = Math.round(h * ratio);
+            }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+            let quality = 0.7;
+            (function tryCompress() {
+                canvas.toBlob(blob => {
+                    if (!blob) return reject();
+                    if (blob.size <= maxKB * 1024 || quality <= 0.2) return resolve(blob);
+                    quality -= 0.1;
+                    tryCompress();
+                }, 'image/jpeg', quality);
+            })();
+        };
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
+// Interceptar submit: enviar con FormData usando archivos comprimidos
+document.getElementById('doc-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const keys = ['ine', 'licencia', 'circulacion'];
+    const missing = keys.filter(k => !compressedFiles[k]);
+    if (missing.length) {
+        alert('Faltan documentos por subir: ' + missing.join(', '));
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    const fd = new FormData();
+    fd.append('_token', document.querySelector('input[name="_token"]').value);
+    for (const key of keys) {
+        fd.append(fieldMap[key], compressedFiles[key]);
+    }
+
+    fetch(this.action, {
+        method: 'POST',
+        body: fd,
+        headers: { 'Accept': 'text/html' },
+        redirect: 'follow'
+    }).then(resp => {
+        if (resp.redirected) {
+            window.location.href = resp.url;
+        } else {
+            return resp.text().then(html => { document.open(); document.write(html); document.close(); });
+        }
+    }).catch(() => {
+        alert('Error de conexión. Intenta de nuevo.');
+        btn.disabled = false;
+        btn.textContent = 'Enviar solicitud ✓';
+    });
+});
 </script>
 @endpush
 @endsection

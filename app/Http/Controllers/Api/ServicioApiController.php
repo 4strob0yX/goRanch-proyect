@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Conductor;
 use App\Models\PuntoRecoleccion;
 use App\Models\Servicio;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -391,14 +392,13 @@ class ServicioApiController extends Controller
         $query = Servicio::where('estatus', 'buscando')
             ->whereNull('conductor_id')
             ->with('cliente')
-            ->orderBy('creado_en', 'desc')
             ->limit(10);
 
         if ($conductor->punto_recoleccion_id) {
-            $query->where(function ($q) use ($conductor) {
-                $q->where('punto_recoleccion_id', $conductor->punto_recoleccion_id)
-                  ->orWhereNull('punto_recoleccion_id');
-            });
+            $query->orderByRaw("CASE WHEN punto_recoleccion_id = ? THEN 0 ELSE 1 END", [$conductor->punto_recoleccion_id])
+                  ->orderBy('creado_en', 'desc');
+        } else {
+            $query->orderBy('creado_en', 'desc');
         }
 
         $servicios = $query->get()->map(fn($s) => [

@@ -107,15 +107,18 @@ class RegistroConductorController extends Controller
     public function storePaso3(Request $request)
     {
         $request->validate([
-            'ine'                  => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'licencia'             => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'tarjeta_circulacion'  => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'ine'                  => 'required|file|mimes:jpg,jpeg,png,pdf|max:900',
+            'licencia'             => 'required|file|mimes:jpg,jpeg,png,pdf|max:900',
+            'tarjeta_circulacion'  => 'required|file|mimes:jpg,jpeg,png,pdf|max:900',
         ], [
             'ine.required'                  => 'La identificación oficial (INE) es obligatoria.',
+            'ine.max'                       => 'La INE no debe superar 900KB.',
             'ine.mimes'                     => 'La INE debe ser imagen o PDF.',
             'licencia.required'             => 'La licencia de conducir es obligatoria.',
+            'licencia.max'                  => 'La licencia no debe superar 900KB.',
             'licencia.mimes'                => 'La licencia debe ser imagen o PDF.',
             'tarjeta_circulacion.required'  => 'La tarjeta de circulación es obligatoria.',
+            'tarjeta_circulacion.max'       => 'La tarjeta de circulación no debe superar 900KB.',
             'tarjeta_circulacion.mimes'     => 'La tarjeta de circulación debe ser imagen o PDF.',
         ]);
 
